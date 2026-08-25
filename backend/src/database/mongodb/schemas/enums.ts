@@ -1,0 +1,73 @@
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+}
+
+export enum SubscriptionTier {
+  FREE = 'FREE',
+  STARTER = 'STARTER',
+  PRO = 'PRO',
+  ENTERPRISE = 'ENTERPRISE',
+}
+
+export enum ChannelStatus {
+  CONNECTED = 'CONNECTED',
+  DISCONNECTED = 'DISCONNECTED',
+  ERROR = 'ERROR',
+  PENDING_REVIEW = 'PENDING_REVIEW',
+}
+
+export enum AutomationStatus {
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  DRAFT = 'DRAFT',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum TriggerType {
+  COMMENT_KEYWORD = 'COMMENT_KEYWORD',
+  COMMENT_REGEX = 'COMMENT_REGEX',
+  NEW_VIDEO = 'NEW_VIDEO',
+  CHANNEL_MILESTONE = 'CHANNEL_MILESTONE',
+}
+
+export enum ActionType {
+  REPLY_COMMENT = 'REPLY_COMMENT',
+  SEND_LANDING_PAGE_LINK = 'SEND_LANDING_PAGE_LINK',
+  COLLECT_EMAIL = 'COLLECT_EMAIL',
+  SEND_EMAIL = 'SEND_EMAIL',
+  ADD_TAG = 'ADD_TAG',
+  CALL_WEBHOOK = 'CALL_WEBHOOK',
+}
+
+export enum EmailProvider {
+  SMTP = 'SMTP',
+  SENDGRID = 'SENDGRID',
+  MAILGUN = 'MAILGUN',
+  SES = 'SES',
+}
+
+export enum EmailStatus {
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  OPENED = 'OPENED',
+  CLICKED = 'CLICKED',
+  BOUNCED = 'BOUNCED',
+  FAILED = 'FAILED',
+  UNSUBSCRIBED = 'UNSUBSCRIBED',
+}
+
+export enum LandingPageStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum WebhookEventType {
+  COMMENT_CREATED = 'COMMENT_CREATED',
+  COMMENT_UPDATED = 'COMMENT_UPDATED',
+  VIDEO_UPLOADED = 'VIDEO_UPLOADED',
+  SUBSCRIPTION_CHANGED = 'SUBSCRIPTION_CHANGED',
+}

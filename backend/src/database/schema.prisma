@@ -1,0 +1,715 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum ChannelStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  PENDING_REVIEW
+}
+
+enum AutomationStatus {
+  ACTIVE
+  PAUSED
+  DRAFT
+  ARCHIVED
+}
+
+enum TriggerType {
+  COMMENT_KEYWORD
+  COMMENT_REGEX
+  NEW_VIDEO
+  CHANNEL_MILESTONE
+  FORM_SUBMITTED
+}
+
+enum ConditionType {
+  COMMENT_CONTAINS
+  COMMENT_NOT_CONTAINS
+  EMAIL_EXISTS
+  EMAIL_NOT_EXISTS
+  FORM_SUBMITTED
+  VIDEO_SPECIFIC
+}
+
+enum ActionType {
+  REPLY_COMMENT
+  SEND_LANDING_PAGE_LINK
+  COLLECT_EMAIL
+  SEND_EMAIL
+  ADD_TAG
+  CALL_WEBHOOK
+  REPLY_WITH_FORM_LINK
+  DELAY
+  END
+}
+
+enum EmailProvider {
+  SMTP
+  SENDGRID
+  MAILGUN
+  SES
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  UNSUBSCRIBED
+}
+
+enum LandingPageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum WebhookEventType {
+  COMMENT_CREATED
+  COMMENT_UPDATED
+  VIDEO_UPLOADED
+  SUBSCRIPTION_CHANGED
+}
+
+model User {
+  id                    String             @id @default(cuid())
+  email                 String             @unique
+  passwordHash          String?
+  firstName             String?
+  lastName              String?
+  avatar                String?
+  role                  UserRole           @default(USER)
+  subscriptionTier      SubscriptionTier   @default(FREE)
+  subscriptionExpiresAt DateTime?
+  stripeCustomerId      String?
+  isEmailVerified       Boolean            @default(false)
+  emailVerificationToken String?
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+  twoFactorEnabled      Boolean            @default(false)
+  twoFactorSecret       String?
+  lastLoginAt           DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  deletedAt             DateTime?
+
+  channels              Channel[]
+  automations           Automation[]
+  emailCaptures         EmailCapture[]
+  emailSequences        EmailSequence[]
+  landingPages          LandingPage[]
+  notifications         Notification[]
+  auditLogs             AuditLog[]         @relation("UserAuditLogs")
+  performedAudits       AuditLog[]         @relation("AdminAuditLogs")
+  apiKeys               ApiKey[]
+  emailLogs             EmailLog[]
+  analyticsEvents       AnalyticsEvent[]
+  videos                Video[]
+  formSubmissions       FormSubmission[]
+
+  @@index([email])
+  @@index([subscriptionTier])
+  @@map("users")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  keyHash     String
+  prefix      String
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model Channel {
+  id                String         @id @default(cuid())
+  userId            String
+  youtubeChannelId  String         @unique
+  title             String
+  description       String?
+  customUrl         String?
+  thumbnailUrl      String?
+  subscriberCount   Int            @default(0)
+  videoCount        Int            @default(0)
+  viewCount         BigInt         @default(0)
+  status            ChannelStatus  @default(PENDING_REVIEW)
+  accessToken       String         @db.Text
+  refreshToken      String         @db.Text
+  tokenExpiresAt    DateTime
+  scope             String[]
+  lastSyncedAt      DateTime?
+  syncError         String?
+  settings          Json           @default("{}")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  automations       Automation[]
+  comments          Comment[]
+  webhookEvents     WebhookEvent[]
+  emailCaptures     EmailCapture[]
+  landingPages      LandingPage[]
+  analyticsEvents   AnalyticsEvent[]
+  videos            Video[]
+  formSubmissions   FormSubmission[]
+
+  @@index([userId])
+  @@index([youtubeChannelId])
+  @@index([status])
+  @@map("channels")
+}
+
+model Automation {
+  id              String            @id @default(cuid())
+  userId          String
+  channelId       String
+  name            String
+  description     String?
+  status          AutomationStatus  @default(DRAFT)
+  triggerType     TriggerType
+  triggerConfig   Json
+  videoIds        String[]          @default([])
+  executionCount  Int               @default(0)
+  lastExecutedAt  DateTime?
+  settings        Json              @default("{}")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel         Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  actions         AutomationAction[]
+  executions      AutomationExecution[]
+  emailCaptures   EmailCapture[]
+  analyticsEvents AnalyticsEvent[]
+  formSubmissions FormSubmission[]
+
+  @@index([userId])
+  @@index([channelId])
+  @@index([status])
+  @@map("automations")
+}
+
+model AutomationAction {
+  id              String        @id @default(cuid())
+  automationId    String
+  type            ActionType
+  config          Json
+  order           Int           @default(0)
+  conditions      Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  automation      Automation    @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  executions      ActionExecution[]
+
+  @@index([automationId])
+  @@map("automation_actions")
+}
+
+model AutomationExecution {
+  id              String        @id @default(cuid())
+  automationId    String
+  triggerData     Json
+  triggerCommentId String?      @unique
+  status          String        @default("pending")
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  error           String?
+  metadata        Json          @default("{}")
+
+  automation      Automation    @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  actions         ActionExecution[]
+  triggerComment  Comment?      @relation("TriggerComment", fields: [triggerCommentId], references: [id], onDelete: SetNull)
+
+  @@index([automationId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("automation_executions")
+}
+
+model ActionExecution {
+  id                   String   @id @default(cuid())
+  executionId          String
+  actionId             String
+  status               String   @default("pending")
+  inputData            Json     @default("{}")
+  outputData           Json     @default("{}")
+  error                String?
+  startedAt            DateTime @default(now())
+  completedAt          DateTime?
+  retryCount           Int      @default(0)
+
+  execution            AutomationExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  action               AutomationAction    @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([actionId])
+  @@index([status])
+  @@map("action_executions")
+}
+
+model Comment {
+  id                String      @id @default(cuid())
+  channelId         String
+  youtubeCommentId  String      @unique
+  videoId           String
+  videoTitle        String?
+  authorChannelId   String
+  authorName        String
+  authorAvatar      String?
+  text              String      @db.Text
+  likeCount         Int         @default(0)
+  replyCount        Int         @default(0)
+  isReply           Boolean     @default(false)
+  parentCommentId   String?
+  publishedAt       DateTime
+  updatedAt         DateTime
+  fetchedAt         DateTime    @default(now())
+  processedAt       DateTime?
+  metadata          Json        @default("{}")
+
+  channel           Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  replies           CommentReply[]
+  automationExecution AutomationExecution? @relation("TriggerComment")
+  formSubmissions   FormSubmission[]
+
+  @@index([channelId])
+  @@index([videoId])
+  @@index([authorChannelId])
+  @@index([publishedAt])
+  @@index([processedAt])
+  @@map("comments")
+}
+
+model CommentReply {
+  id                String      @id @default(cuid())
+  commentId         String
+  automationId      String?
+  youtubeReplyId    String?     @unique
+  text              String      @db.Text
+  status            String      @default("pending")
+  error             String?
+  sentAt            DateTime?
+  createdAt         DateTime    @default(now())
+
+  comment           Comment     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
+  @@index([automationId])
+  @@index([status])
+  @@map("comment_replies")
+}
+
+model EmailCapture {
+  id                String      @id @default(cuid())
+  userId            String
+  channelId         String?
+  automationId      String?
+  landingPageId     String?
+  email             String
+  firstName         String?
+  lastName          String?
+  customFields      Json        @default("{}")
+  source            String      @default("landing_page")
+  ipAddress         String?
+  userAgent         String?
+  referrer          String?
+  consentGiven      Boolean     @default(false)
+  consentIp         String?
+  consentAt         DateTime?
+  tags              String[]
+  isVerified        Boolean     @default(false)
+  verificationToken String?
+  verifiedAt        DateTime?
+  unsubscribedAt    DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel           Channel?    @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  automation        Automation? @relation(fields: [automationId], references: [id], onDelete: SetNull)
+  landingPage       LandingPage? @relation(fields: [landingPageId], references: [id], onDelete: SetNull)
+  emailLogs         EmailLog[]
+  enrollments       EmailEnrollment[]
+  formSubmissions   FormSubmission[]
+  landingPageSubmissions LandingPageSubmission[]
+
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
+  @@index([channelId])
+  @@index([automationId])
+  @@index([landingPageId])
+  @@index([createdAt])
+  @@map("email_captures")
+}
+
+model EmailSequence {
+  id              String        @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  isActive        Boolean       @default(true)
+  triggerType     String        @default("immediate")
+  triggerConfig   Json          @default("{}")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps           EmailSequenceStep[]
+  enrollments     EmailEnrollment[]
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("email_sequences")
+}
+
+model EmailSequenceStep {
+  id                String      @id @default(cuid())
+  sequenceId        String
+  order             Int
+  delayHours        Int         @default(0)
+  delayDays         Int         @default(0)
+  subject           String
+  htmlContent       String      @db.Text
+  textContent       String?     @db.Text
+  conditions        Json        @default("{}")
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  sequence          EmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  logs              EmailLog[]
+
+  @@index([sequenceId])
+  @@index([order])
+  @@map("email_sequence_steps")
+}
+
+model EmailEnrollment {
+  id                String      @id @default(cuid())
+  sequenceId        String
+  emailCaptureId    String
+  currentStep       Int         @default(0)
+  status            String      @default("active")
+  startedAt         DateTime    @default(now())
+  completedAt       DateTime?
+  pausedAt          DateTime?
+  metadata          Json        @default("{}")
+
+  sequence          EmailSequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  emailCapture      EmailCapture   @relation(fields: [emailCaptureId], references: [id], onDelete: Cascade)
+  logs              EmailLog[]
+
+  @@unique([sequenceId, emailCaptureId])
+  @@index([sequenceId])
+  @@index([emailCaptureId])
+  @@index([status])
+  @@map("email_enrollments")
+}
+
+model EmailLog {
+  id                String      @id @default(cuid())
+  userId            String
+  emailCaptureId    String?
+  enrollmentId      String?
+  sequenceStepId    String?
+  formSubmissionId  String?   @unique(map: "email_logs_form_submission_id_unique")
+  toEmail           String
+  fromEmail         String
+  subject           String
+  htmlContent       String      @db.Text
+  textContent       String?     @db.Text
+  status            EmailStatus @default(PENDING)
+  provider          EmailProvider @default(SMTP)
+  providerMessageId String?
+  error             String?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  openedAt          DateTime?
+  clickedAt         DateTime?
+  unsubscribedAt    DateTime?
+  bouncedAt         DateTime?
+  metadata          Json        @default("{}")
+  createdAt         DateTime    @default(now())
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailCapture      EmailCapture? @relation(fields: [emailCaptureId], references: [id], onDelete: SetNull)
+  enrollment        EmailEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  sequenceStep      EmailSequenceStep? @relation(fields: [sequenceStepId], references: [id], onDelete: SetNull)
+  formSubmission    FormSubmission? @relation("EmailLogFormSubmission", fields: [formSubmissionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([emailCaptureId])
+  @@index([enrollmentId])
+  @@index([status])
+  @@index([sentAt])
+  @@map("email_logs")
+}
+
+model LandingPage {
+  id              String              @id @default(cuid())
+  userId          String
+  channelId       String?
+  name            String
+  slug            String              @unique
+  title           String
+  description     String?
+  htmlContent     String              @db.Text
+  cssContent      String?
+  jsContent       String?
+  seoTitle        String?
+  seoDescription  String?
+  seoImage        String?
+  status          LandingPageStatus   @default(DRAFT)
+  customDomain    String?
+  publishUrl      String?
+  settings        Json                @default("{}")
+  formFields      Json                @default("[]")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+  publishedAt     DateTime?
+
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel         Channel?            @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  submissions     LandingPageSubmission[]
+  emailCaptures   EmailCapture[]
+  formSubmissions FormSubmission[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+  @@map("landing_pages")
+}
+
+model LandingPageSubmission {
+  id              String      @id @default(cuid())
+  landingPageId   String
+  emailCaptureId  String?
+  formData        Json        @default("{}")
+  ipAddress       String?
+  userAgent       String?
+  referrer        String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  createdAt       DateTime    @default(now())
+
+  landingPage     LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+  emailCapture    EmailCapture? @relation(fields: [emailCaptureId], references: [id], onDelete: SetNull)
+
+  @@index([landingPageId])
+  @@index([emailCaptureId])
+  @@index([createdAt])
+  @@map("landing_page_submissions")
+}
+
+model Video {
+  id              String      @id @default(cuid())
+  userId          String
+  channelId       String
+  youtubeVideoId  String      @unique
+  title           String
+  description     String?
+  thumbnailUrl    String?
+  publishedAt     DateTime
+  viewCount       Int         @default(0)
+  likeCount       Int         @default(0)
+  commentCount    Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  syncedAt        DateTime?   @default(now())
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel         Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  formSubmissions FormSubmission[]
+
+  @@index([userId])
+  @@index([channelId])
+  @@index([youtubeVideoId])
+  @@index([publishedAt])
+  @@map("videos")
+}
+
+model FormSubmission {
+  id              String      @id @default(cuid())
+  userId          String
+  automationId    String
+  formId          String
+  channelId       String?
+  videoId         String?
+  commentId       String?
+  emailCaptureId  String?
+  email           String
+  firstName       String?
+  lastName        String?
+  customFields    Json        @default("{}")
+  ipAddress       String?
+  userAgent       String?
+  referrer        String?
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmContent      String?
+  utmTerm         String?
+  deliveryStatus  String      @default("pending")
+  errorMessage    String?
+  submittedAt     DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  automation      Automation  @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  form            LandingPage @relation(fields: [formId], references: [id], onDelete: Cascade)
+  channel         Channel?    @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  video           Video?      @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  comment         Comment?    @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  emailLog        EmailLog?   @relation("EmailLogFormSubmission")
+  emailCapture    EmailCapture? @relation(fields: [emailCaptureId], references: [id], onDelete: SetNull)
+
+  @@unique([automationId, email, videoId])
+  @@index([userId])
+  @@index([automationId])
+  @@index([formId])
+  @@index([channelId])
+  @@index([videoId])
+  @@index([emailCaptureId])
+  @@index([deliveryStatus])
+  @@index([submittedAt])
+  @@map("form_submissions")
+}
+
+model WebhookEvent {
+  id              String            @id @default(cuid())
+  channelId       String
+  eventType       WebhookEventType
+  resourceId      String
+  payload         Json
+  processed       Boolean           @default(false)
+  processedAt     DateTime?
+  error           String?
+  retryCount      Int               @default(0)
+  receivedAt      DateTime          @default(now())
+
+  channel         Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([eventType])
+  @@index([processed])
+  @@index([receivedAt])
+  @@map("webhook_events")
+}
+
+model AnalyticsEvent {
+  id              String      @id @default(cuid())
+  userId          String
+  channelId       String?
+  automationId    String?
+  eventType       String
+  eventData       Json        @default("{}")
+  metadata        Json        @default("{}")
+  sessionId       String?
+  createdAt       DateTime    @default(now())
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel         Channel?    @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  automation      Automation? @relation(fields: [automationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([channelId])
+  @@index([automationId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  message     String   @db.Text
+  data        Json     @default("{}")
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  adminId     String?
+  action      String
+  resource    String
+  resourceId  String?
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
+  admin       User?    @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([adminId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}
