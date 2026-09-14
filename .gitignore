@@ -70,3 +70,6 @@ temp/
 # Prisma
 # ============================================================
 backend/src/database/migrations/*.sql
+
+# Lock file — Railway uses Dockerfile now
+backend/package-lock.json
