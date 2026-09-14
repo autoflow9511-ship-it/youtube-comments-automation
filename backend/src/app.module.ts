@@ -30,14 +30,10 @@ import { RolesGuard } from '@guards/roles.guard';
     CommonModule,
     QueueModule,
     SchedulerModule,
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigModule],
-      useFactory: (configModule: any) => ({
-        ttl: configModule.get('throttle.ttl') || 60,
-        limit: configModule.get('throttle.limit') || 100,
-      }),
-    }),
+    ThrottlerModule.forRoot([{
+      ttl: parseInt(process.env.THROTTLE_TTL || '60', 10) * 1000,
+      limit: parseInt(process.env.THROTTLE_LIMIT || '100', 10),
+    }]),
     AuthModule,
     UsersModule,
     ChannelsModule,

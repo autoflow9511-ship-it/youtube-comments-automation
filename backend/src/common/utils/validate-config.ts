@@ -12,13 +12,13 @@ export function validateConfig<T>(
   }
 
   const validated = plainToInstance(enumType, value);
-  const errors = validateSync(validated, { whitelist: true, forbidNonWhitelisted: true });
+  const errors = validateSync(validated as object, { whitelist: true, forbidNonWhitelisted: true });
 
   if (errors.length > 0) {
     throw new Error(`Invalid value for ${envKey}: ${errors.map(e => Object.values(e.constraints || {})).join(', ')}`);
   }
 
-  return validated;
+  return validated as T;
 }
 
 export function getRequiredEnv(key: string): string {

@@ -2,16 +2,16 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { YouTubeService } from '@youtube/youtube.service';
-import { QueueService, AutomationJobData } from '@queue/queue.service';
+import { YouTubeService } from '../../youtube/youtube.service';
+import { QueueService, AutomationJobData, QueueName } from '@queue/queue.service';
 import { EmailsService } from '@modules/emails/emails.service';
 import { LandingPagesService } from '@modules/landing-pages/landing-pages.service';
 import { PublicFormsService } from '@modules/public-forms/public-forms.service';
-import { ActionType, AutomationStatus, ConditionType, Prisma } from '@prisma/client';
+import { ActionType, AutomationStatus, Prisma } from '@prisma/client';
 import { EncryptionService } from '@common/services/encryption.service';
 import { EmailProviderService } from '@common/email/email-provider.service';
 
-@Processor(QueueService.AUTOMATIONS)
+@Processor(QueueName.AUTOMATIONS)
 @Injectable()
 export class AutomationProcessor extends WorkerHost {
   private readonly logger = new Logger(AutomationProcessor.name);
@@ -102,7 +102,7 @@ export class AutomationProcessor extends WorkerHost {
             },
           });
 
-          if (!action.conditions?.continueOnError) {
+          if (!(action.conditions as any)?.continueOnError) {
             throw error;
           }
         }
@@ -257,9 +257,9 @@ export class AutomationProcessor extends WorkerHost {
         subject,
         html: htmlContent,
         text: textContent,
-        fromEmail: action.config.fromEmail,
+        from: action.config.fromEmail,
         fromName: action.config.fromName,
-      }, action.config.emailProvider);
+      } as any, action.config.emailProvider);
 
       // Update delivery status
       if (result.success) {

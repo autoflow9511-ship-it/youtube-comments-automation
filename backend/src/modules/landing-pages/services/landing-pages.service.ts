@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../database/prisma.service';
 import { QueueService } from '../../../queue/queue.service';
 import { LandingPageStatus } from '@prisma/client';
@@ -11,6 +12,7 @@ export class LandingPagesService {
   constructor(
     private prisma: PrismaService,
     private queueService: QueueService,
+    private configService: ConfigService,
   ) {}
 
   // ============================================

@@ -114,12 +114,7 @@ export class GmailProvider implements EmailProvider {
         attachments: options.attachments,
         headers: options.headers,
         priority: options.priority,
-        auth: {
-          type: 'OAuth2',
-          user: this.configService.get<string>('email.from'),
-          accessToken: await this.getAccessToken(),
-        },
-      });
+      }) as any;
 
       return {
         success: true,

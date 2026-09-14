@@ -226,7 +226,7 @@ export class CommentMonitorService {
         const execution = await this.prisma.automationExecution.create({
           data: {
             automationId: automation.id,
-            triggerData: triggerData,
+            triggerData: triggerData as any,
             status: 'pending',
             startedAt: new Date(),
           },

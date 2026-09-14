@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '@database/prisma.service';
 import { QueueService } from '@queue/queue.service';
-import { YouTubeService } from '@youtube/youtube.service';
+import { YouTubeService } from '../youtube/youtube.service';
 import { EmailsService } from '@modules/emails/emails.service';
 import { ChannelStatus, EmailStatus } from '@prisma/client';
 
@@ -49,13 +49,6 @@ export class SchedulerService implements OnModuleInit {
     const enrollments = await this.prisma.emailEnrollment.findMany({
       where: {
         status: 'active',
-        OR: [
-          { currentStep: 0 },
-          {
-            currentStep: { gt: 0 },
-            nextSendAt: { lte: new Date() },
-          },
-        ],
       },
       include: {
         sequence: { include: { steps: { orderBy: { order: 'asc' } } } },
@@ -107,9 +100,6 @@ export class SchedulerService implements OnModuleInit {
         where: { id: enrollment.id },
         data: {
           currentStep: currentStep + 1,
-          nextSendAt: currentStep + 1 < steps.length
-            ? new Date(enrollment.startedAt.getTime() + (currentStep + 1) * delayMs)
-            : null,
         },
       });
     } catch (error) {

@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,6 +22,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AutomationEngineService } from './services/automation-engine.service';
+import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { 
@@ -38,7 +40,10 @@ import { AutomationStatus, TriggerType } from '@prisma/client';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class AutomationsController {
-  constructor(private automationEngine: AutomationEngineService) {}
+  constructor(
+    private automationEngine: AutomationEngineService,
+    private prisma: PrismaService,
+  ) {}
 
   @Get()
   @ApiOperation({ 
@@ -169,7 +174,7 @@ export class AutomationsController {
     @Param('id') id: string,
     @Body() dto: TriggerAutomationDto,
   ) {
-    return this.automationEngine.triggerAutomationManually(id, dto.triggerData);
+    return this.automationEngine.executeAutomation(id, dto.triggerData);
   }
 
   @Get(':id/executions')

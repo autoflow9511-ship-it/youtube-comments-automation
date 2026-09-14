@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../database/prisma.service';
+import { PrismaService } from '../../../database/prisma.service';
 import { User, UserRole } from '@prisma/client';
 
 export interface RefreshTokenPayload {
@@ -31,7 +31,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
   }
 
   async validate(req: Request, payload: RefreshTokenPayload): Promise<{ user: User; refreshToken: string }> {
-    const refreshToken = req.headers['authorization']?.replace('Bearer ', '');
+    const refreshToken = (req as any).headers['authorization']?.replace('Bearer ', '');
     
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not provided');

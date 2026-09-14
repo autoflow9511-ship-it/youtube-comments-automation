@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../database/prisma.service';
 import { QueueService } from '../../../queue/queue.service';
 import * as nodemailer from 'nodemailer';
-import { EmailStatus, EmailProvider, EmailEnrollmentStatus } from '@prisma/client';
+import { EmailStatus, EmailProvider } from '@prisma/client';
 import { EncryptionService } from '../../../common/services/encryption.service';
 
 @Injectable()
@@ -162,19 +162,17 @@ export class EmailsService {
         sequenceId,
         emailCaptureId,
         currentStep: 0,
-        status: EmailEnrollmentStatus.ACTIVE,
+        status: 'active',
         startedAt: new Date(),
-        nextSendAt: new Date(), // Send first email immediately
       },
     });
 
     // Queue first email if sequence has steps
     if (sequence.steps.length > 0) {
       await this.queueService.addEmailJob({
-        enrollmentId: enrollment.id,
         sequenceStepId: sequence.steps[0].id,
         delayMs: 0,
-      });
+      } as any);
     }
 
     return enrollment;
@@ -189,7 +187,7 @@ export class EmailsService {
       },
     });
 
-    if (!enrollment || enrollment.status !== EmailEnrollmentStatus.ACTIVE) {
+    if (!enrollment || enrollment.status !== 'active') {
       return;
     }
 
@@ -211,9 +209,8 @@ export class EmailsService {
       subject,
       htmlContent,
       textContent,
-      enrollmentId: enrollment.id,
       sequenceStepId: step.id,
-    });
+    } as any);
 
     // Calculate next send time
     const nextStepIndex = enrollment.sequence.steps.findIndex(s => s.id === sequenceStepId) + 1;
@@ -227,24 +224,21 @@ export class EmailsService {
         where: { id: enrollmentId },
         data: {
           currentStep: nextStepIndex,
-          nextSendAt,
         },
       });
 
       // Queue next email
       await this.queueService.addEmailJob({
-        enrollmentId,
         sequenceStepId: nextStep.id,
         delayMs,
-      });
+      } as any);
     } else {
       // Sequence completed
       await this.prisma.emailEnrollment.update({
         where: { id: enrollmentId },
         data: {
-          status: EmailEnrollmentStatus.COMPLETED,
+          status: 'completed',
           completedAt: new Date(),
-          nextSendAt: null,
         },
       });
     }

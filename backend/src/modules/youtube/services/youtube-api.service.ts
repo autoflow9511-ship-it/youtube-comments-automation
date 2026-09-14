@@ -1,8 +1,8 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { google, youtube_v3, Auth } from 'googleapis';
-import { PrismaService } from '../../database/prisma.service';
-import { EncryptionService } from '../../common/services/encryption.service';
+import { PrismaService } from '../../../database/prisma.service';
+import { EncryptionService } from '../../../common/services/encryption.service';
 import { ChannelStatus } from '@prisma/client';
 
 export interface YouTubeChannelInfo {
@@ -234,7 +234,7 @@ export class YouTubeApiService {
         description: channel.snippet?.description || '',
         customUrl: channel.snippet?.customUrl,
         publishedAt: channel.snippet?.publishedAt || '',
-        thumbnails: channel.snippet?.thumbnails || {},
+        thumbnails: (channel.snippet?.thumbnails || {}) as any,
       },
       statistics: {
         subscriberCount: channel.statistics?.subscriberCount || '0',
@@ -268,7 +268,7 @@ export class YouTubeApiService {
         description: channel.snippet?.description || '',
         customUrl: channel.snippet?.customUrl,
         publishedAt: channel.snippet?.publishedAt || '',
-        thumbnails: channel.snippet?.thumbnails || {},
+        thumbnails: (channel.snippet?.thumbnails || {}) as any,
       },
       statistics: {
         subscriberCount: channel.statistics?.subscriberCount || '0',
@@ -453,7 +453,7 @@ export class YouTubeApiService {
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
     await youtube.comments.setModerationStatus({
-      id: commentId,
+      id: [commentId],
       moderationStatus: status,
     });
   }

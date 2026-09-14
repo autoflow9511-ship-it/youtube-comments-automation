@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsNumber, Min, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsNumber, Min, IsObject, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TriggerType, ActionType, AutomationStatus } from '@prisma/client';
@@ -244,4 +244,4 @@ export class ActionExecutionResponseDto {
   completedAt?: Date;
 }
 
-import { IsString, MinLength } from 'class-validator';
+// MinLength imported at top of file

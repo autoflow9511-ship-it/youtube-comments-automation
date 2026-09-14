@@ -50,7 +50,7 @@ export class YouTubeService {
       auth: this.getOAuth2Client(accessToken, refreshToken),
     });
 
-    const response = await youtube.channels.list({
+    const response = await (youtube.channels.list as any)({
       part: ['snippet', 'statistics', 'contentDetails'],
       forHandle: handle,
     });
@@ -88,7 +88,7 @@ export class YouTubeService {
     }
 
     if (options?.parentId) {
-      params.parentId = options.parentId;
+      (params as any).parentId = options.parentId;
     }
 
     const response = await youtube.commentThreads.list(params);

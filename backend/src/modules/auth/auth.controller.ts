@@ -2,7 +2,9 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
+  Param,
   Req,
   Res,
   UseGuards,
@@ -10,6 +12,7 @@ import {
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiTags,
   ApiOperation,
@@ -47,7 +50,10 @@ import { User } from '@prisma/client';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   // ============================================
   // EMAIL/PASSWORD AUTHENTICATION

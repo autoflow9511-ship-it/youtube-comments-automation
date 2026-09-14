@@ -1,16 +1,16 @@
-import { Connection, Model, model } from 'mongoose';
-import UserSchema from './schemas/UserSchema';
-import ChannelSchema from './schemas/ChannelSchema';
-import { AutomationSchema, AutomationActionSchema } from './schemas/AutomationSchema';
-import { CommentSchema, CommentReplySchema } from './schemas/CommentSchema';
+import { Connection, Model } from 'mongoose';
+import UserSchema from '../schemas/UserSchema';
+import ChannelSchema from '../schemas/ChannelSchema';
+import { AutomationSchema, AutomationActionSchema } from '../schemas/AutomationSchema';
+import { CommentSchema, CommentReplySchema } from '../schemas/CommentSchema';
 import { 
   EmailCaptureSchema, 
   EmailSequenceSchema, 
   EmailSequenceStepSchema, 
   EmailEnrollmentSchema, 
   EmailLogSchema 
-} from './schemas/EmailSchema';
-import { LandingPageSchema, LandingPageSubmissionSchema } from './schemas/LandingPageSchema';
+} from '../schemas/EmailSchema';
+import { LandingPageSchema, LandingPageSubmissionSchema } from '../schemas/LandingPageSchema';
 import { 
   WebhookEventSchema, 
   AnalyticsEventSchema, 
@@ -18,12 +18,12 @@ import {
   AuditLogSchema, 
   ApiKeySchema, 
   SystemConfigSchema 
-} from './schemas/SystemSchema';
-import { AutomationExecutionSchema, ActionExecutionSchema } from './schemas/AutomationExecutionSchema';
-import { PublicFormSchema } from './schemas/PublicFormSchema';
-import { FormSubmissionSchema } from './schemas/FormSubmissionSchema';
-import { EmailDeliveryStatusSchema } from './schemas/EmailDeliveryStatusSchema';
-import { AutomationVideoSchema } from './schemas/AutomationVideoSchema';
+} from '../schemas/SystemSchema';
+import { AutomationExecutionSchema, ActionExecutionSchema } from '../schemas/AutomationExecutionSchema';
+import { PublicFormSchema } from '../schemas/PublicFormSchema';
+import { FormSubmissionSchema } from '../schemas/FormSubmissionSchema';
+import { EmailDeliveryStatusSchema } from '../schemas/EmailDeliveryStatusSchema';
+import { AutomationVideoSchema } from '../schemas/AutomationVideoSchema';
 
 export interface Models {
   User: Model<any>;

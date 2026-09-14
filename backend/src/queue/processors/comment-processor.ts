@@ -2,12 +2,12 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { YouTubeService } from '@youtube/youtube.service';
-import { QueueService, CommentJobData } from '@queue/queue.service';
-import { AutomationService } from '@modules/automations/automations.service';
+import { YouTubeService } from '../../youtube/youtube.service';
+import { QueueService, CommentJobData, QueueName } from '@queue/queue.service';
+import { AutomationsService } from '@modules/automations/automations.service';
 import { TriggerType } from '@prisma/client';
 
-@Processor(QueueService.COMMENTS)
+@Processor(QueueName.COMMENTS)
 @Injectable()
 export class CommentProcessor extends WorkerHost {
   private readonly logger = new Logger(CommentProcessor.name);

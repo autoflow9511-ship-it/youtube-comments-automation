@@ -2,11 +2,11 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { QueueService, WebhookJobData } from '@queue/queue.service';
-import { YouTubeService } from '@youtube/youtube.service';
+import { QueueService, WebhookJobData, QueueName } from '@queue/queue.service';
+import { YouTubeService } from '../../youtube/youtube.service';
 import { WebhookEventType } from '@prisma/client';
 
-@Processor(QueueService.WEBHOOKS)
+@Processor(QueueName.WEBHOOKS)
 @Injectable()
 export class WebhookProcessor extends WorkerHost {
   private readonly logger = new Logger(WebhookProcessor.name);

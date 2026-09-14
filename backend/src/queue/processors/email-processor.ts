@@ -3,10 +3,10 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
 import { EmailsService } from '@modules/emails/emails.service';
-import { QueueService, EmailJobData } from '@queue/queue.service';
+import { QueueService, EmailJobData, QueueName } from '@queue/queue.service';
 import { EmailStatus } from '@prisma/client';
 
-@Processor(QueueService.EMAILS)
+@Processor(QueueName.EMAILS)
 @Injectable()
 export class EmailProcessor extends WorkerHost {
   private readonly logger = new Logger(EmailProcessor.name);

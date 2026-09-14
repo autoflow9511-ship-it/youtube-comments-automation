@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service';
 import { EncryptionService } from '../../common/services/encryption.service';
-import { JwtPayload, RefreshTokenPayload } from '../../strategies/jwt.strategy';
+import { JwtPayload, RefreshTokenPayload } from './strategies/jwt.strategy';
 import { 
   RegisterDto, 
   LoginDto, 

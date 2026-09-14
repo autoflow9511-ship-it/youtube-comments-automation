@@ -2,10 +2,10 @@ import { Injectable, Logger, NotFoundException, BadRequestException, ConflictExc
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { PublicForm, PublicFormDocument } from '@database/mongodb/models';
-import { FormSubmission, FormSubmissionDocument } from '@database/mongodb/models';
-import { EmailDeliveryStatus, EmailDeliveryStatusDocument, EmailDeliveryStatusEnum } from '@database/mongodb/models';
-import { AutomationVideo, AutomationVideoDocument } from '@database/mongodb/models';
+import { PublicForm, PublicFormDocument } from '../../database/mongodb/schemas/public-form.schema';
+import { FormSubmission, FormSubmissionDocument } from '../../database/mongodb/schemas/form-submission.schema';
+import { EmailDeliveryStatus, EmailDeliveryStatusDocument, EmailDeliveryStatusEnum } from '../../database/mongodb/schemas/email-delivery-status.schema';
+import { AutomationVideo, AutomationVideoDocument } from '../../database/mongodb/schemas/automation-video.schema';
 import { EmailProviderService } from '@common/email/email-provider.service';
 import { LandingPagesService } from '@modules/landing-pages/landing-pages.service';
 import { PrismaService } from '@database/prisma.service';
@@ -169,7 +169,7 @@ export class PublicFormsService {
     const [forms, total] = await Promise.all([
       this.publicFormModel.find(where)
         .skip(skip)
-        .take(limit)
+        .limit(limit)
         .sort({ createdAt: -1 }),
       this.publicFormModel.countDocuments(where),
     ]);
@@ -347,7 +347,7 @@ export class PublicFormsService {
 
       // Get email configuration from first SEND_EMAIL action
       const emailAction = automation.actions[0];
-      const emailConfig = emailAction.config;
+      const emailConfig = emailAction.config as any;
 
       if (!emailConfig.subject || !emailConfig.htmlContent) {
         this.logger.warn(`Email action ${emailAction.id} missing subject or content`);
@@ -413,8 +413,8 @@ export class PublicFormsService {
         subject,
         html: htmlContent,
         text: textContent,
-        fromEmail: emailConfig.fromEmail,
-        fromName: emailConfig.fromName,
+        from: (emailConfig as any).fromEmail,
+        fromName: (emailConfig as any).fromName,
       });
 
       if (result.success) {
@@ -498,7 +498,7 @@ export class PublicFormsService {
     const [submissions, total] = await Promise.all([
       this.formSubmissionModel.find(where)
         .skip(skip)
-        .take(limit)
+        .limit(limit)
         .sort({ createdAt: -1 })
         .populate('emailDeliveryStatus'),
       this.formSubmissionModel.countDocuments(where),

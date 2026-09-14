@@ -78,7 +78,7 @@ export class AutomationEngineService {
       }
 
       // Prepare execution context
-      const executionContext: Record<string, any> = { 
+      let executionContext: Record<string, any> = { 
         ...triggerData,
         automationId,
         channelId,
@@ -117,7 +117,6 @@ export class AutomationEngineService {
             },
           });
 
-          // Merge output data into context for next actions
           if (result.outputData) {
             executionContext = { ...executionContext, ...result.outputData };
           }
@@ -135,7 +134,7 @@ export class AutomationEngineService {
           });
 
           // Check if automation should continue on error
-          const continueOnError = action.conditions?.continueOnError;
+          const continueOnError = (action.conditions as any)?.continueOnError;
           if (!continueOnError) {
             throw error;
           }
@@ -349,8 +348,7 @@ export class AutomationEngineService {
         htmlContent,
         textContent,
         emailCaptureId: context.emailCaptureId,
-        automationId: context.automationId,
-      });
+      } as any);
 
       return { 
         success: true, 
