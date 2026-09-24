@@ -18,11 +18,8 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate --schema=src/database/schema.prisma
 
-# Build — errors ignore karo (noEmitOnError=false)
-RUN npx nest build || true
+RUN npm run build
 
-# Verify dist/main.js exists
-RUN ls dist/main.js
 
 EXPOSE 3000
 
