@@ -18,7 +18,6 @@ import { EmailSequences } from '@pages/emails/EmailSequences';
 import { LandingPages } from '@pages/landing-pages/LandingPages';
 import { LandingPageBuilder } from '@pages/landing-pages/LandingPageBuilder';
 import { LandingPagePublic } from '@pages/landing-pages/LandingPagePublic';
-import { PublicFormPage } from '@pages/public-forms/PublicFormPage';
 import { Analytics } from '@pages/analytics/Analytics';
 import { Settings } from '@pages/settings/Settings';
 import { AdminPanel } from '@pages/admin/AdminPanel';
@@ -63,7 +62,6 @@ function App() {
     <Routes>
 <Route path="/lp/:slug" element={<LandingPagePublic />} />
       
-      <Route path="/form/:publicFormId" element={<PublicFormPage />} />
        
        <Route element={<AuthLayout />}>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
