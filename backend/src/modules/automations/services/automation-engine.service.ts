@@ -11,7 +11,6 @@ import {
   ChannelStatus,
   EmailStatus,
 } from '@prisma/client';
-import { EncryptionService } from '../../../common/services/encryption.service';
 
 export interface ExecutionContext {
   automationId: string;
@@ -37,7 +36,6 @@ export class AutomationEngineService {
     private emailsService: EmailsService,
     private landingPagesService: LandingPagesService,
     private queueService: QueueService,
-    private encryptionService: EncryptionService,
   ) {}
 
   // ============================================
@@ -45,9 +43,8 @@ export class AutomationEngineService {
   // ============================================
 
   async executeAutomation(context: ExecutionContext): Promise<void> {
-    const { automationId, triggerData, channelId, userId, executionId } = context;
-
-    this.logger.log(`Executing automation ${automationId} (execution ${executionId})`);
+    const { automationId, triggerData } = context;
+    let { channelId, userId, executionId } = context;
 
     try {
       // Get automation with actions
@@ -62,6 +59,18 @@ export class AutomationEngineService {
       if (!automation) {
         throw new Error('Automation not found');
       }
+
+      channelId = channelId || automation.channelId;
+      userId = userId || automation.userId;
+
+      if (!executionId) {
+        const execution = await this.prisma.automationExecution.create({
+          data: { automationId, triggerData, status: 'pending', startedAt: new Date() },
+        });
+        executionId = execution.id;
+      }
+
+      this.logger.log(`Executing automation ${automationId} (execution ${executionId})`);
 
       if (automation.status !== AutomationStatus.ACTIVE) {
         throw new Error('Automation is not active');
@@ -261,6 +270,39 @@ export class AutomationEngineService {
       });
       throw error;
     }
+  }
+
+  private async executeReplyWithFormLink(
+    action: any,
+    context: Record<string, any>,
+    accessToken: string,
+  ): Promise<ActionResult> {
+    const commentId = context.commentId;
+    const landingPageId = action.config.landingPageId;
+    if (!commentId || !landingPageId) throw new Error('Missing commentId or landing page ID');
+
+    const page = await this.prisma.landingPage.findFirst({
+      where: { id: landingPageId, userId: context.userId, deletedAt: null, status: 'PUBLISHED' },
+      select: { publishUrl: true },
+    });
+    if (!page?.publishUrl) throw new Error('Landing page not found or not published');
+
+    const template = action.config.message || '{{formUrl}}';
+    const message = this.interpolate(template, { ...context, formUrl: page.publishUrl, landingPageUrl: page.publishUrl });
+    const replyId = await this.youtubeApiService.replyToComment(commentId, message, accessToken);
+
+    await this.prisma.commentReply.create({
+      data: {
+        commentId,
+        automationId: context.automationId,
+        youtubeReplyId: replyId,
+        text: message,
+        status: 'sent',
+        sentAt: new Date(),
+      },
+    });
+
+    return { success: true, outputData: { replyId, formUrl: page.publishUrl, replyMessage: message } };
   }
 
   private async executeSendLandingPageLink(
@@ -465,6 +507,7 @@ export class AutomationEngineService {
       conditions?: Record<string, any>;
     }>;
     settings?: Record<string, any>;
+    videoIds?: string[];
   }) {
     const channel = await this.prisma.channel.findUnique({
       where: { id: data.channelId },
@@ -486,6 +529,7 @@ export class AutomationEngineService {
         description: data.description,
         triggerType: data.triggerType,
         triggerConfig: data.triggerConfig,
+        videoIds: data.videoIds || [],
         settings: data.settings || {},
         actions: {
           create: data.actions.map(action => ({
@@ -534,6 +578,7 @@ export class AutomationEngineService {
         description: data.description,
         triggerType: data.triggerType,
         triggerConfig: data.triggerConfig,
+        videoIds: data.videoIds || [],
         status: data.status,
         settings: data.settings,
       },
@@ -577,6 +622,7 @@ export class AutomationEngineService {
         description: automation.description,
         triggerType: automation.triggerType,
         triggerConfig: automation.triggerConfig,
+        videoIds: automation.videoIds,
         status: AutomationStatus.DRAFT,
         settings: automation.settings,
         actions: {

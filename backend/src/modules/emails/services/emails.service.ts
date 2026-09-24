@@ -248,6 +248,10 @@ export class EmailsService {
   // EMAIL SENDING
   // ============================================
 
+  async getEmailLogById(id: string) {
+    return this.prisma.emailLog.findUnique({ where: { id } });
+  }
+
   async sendEmail(data: {
     userId: string;
     toEmail: string;

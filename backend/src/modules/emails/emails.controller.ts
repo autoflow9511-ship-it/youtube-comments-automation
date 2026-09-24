@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,13 +33,14 @@ import {
   EmailCaptureResponseDto,
 } from './dto/email.dto';
 import { EmailStatus } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
 
 @ApiTags('Emails')
 @Controller('emails')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class EmailsController {
-  constructor(private emailsService: EmailsService) {}
+  constructor(private emailsService: EmailsService, private prisma: PrismaService) {}
 
   // ============================================
   // EMAIL SEQUENCES

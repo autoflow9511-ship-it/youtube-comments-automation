@@ -5,11 +5,12 @@ import { PrismaModule } from '../../database/prisma.module';
 import { QueueModule } from '../../queue/queue.module';
 import { YouTubeModule } from '../youtube/youtube.module';
 import { AutomationsModule } from '../automations/automations.module';
+import { CommentProcessor } from '../../queue/processors/comment-processor';
 
 @Module({
   imports: [PrismaModule, QueueModule, YouTubeModule, AutomationsModule],
   controllers: [CommentsController],
-  providers: [CommentMonitorService],
+  providers: [CommentMonitorService, CommentProcessor],
   exports: [CommentMonitorService],
 })
 export class CommentsModule {}

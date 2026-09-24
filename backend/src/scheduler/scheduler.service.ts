@@ -2,8 +2,8 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '@database/prisma.service';
 import { QueueService } from '@queue/queue.service';
-import { YouTubeService } from '../youtube/youtube.service';
-import { EmailsService } from '@modules/emails/emails.service';
+import { YouTubeApiService } from '@modules/youtube/services/youtube-api.service';
+import { EmailsService } from '@modules/emails/services/emails.service';
 import { ChannelStatus, EmailStatus } from '@prisma/client';
 
 @Injectable()
@@ -13,34 +13,9 @@ export class SchedulerService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private queueService: QueueService,
-    private youtubeService: YouTubeService,
+    private youtubeService: YouTubeApiService,
     private emailsService: EmailsService,
   ) {}
-
-  async onModuleInit() {
-    await this.scheduleCommentFetching();
-  }
-
-  private async scheduleCommentFetching() {
-    const channels = await this.prisma.channel.findMany({
-      where: {
-        status: ChannelStatus.CONNECTED,
-        deletedAt: null,
-      },
-      select: { id: true },
-    });
-
-    for (const channel of channels) {
-      await this.queueService.addScheduledCommentFetch(channel.id, 5);
-    }
-
-    this.logger.log(`Scheduled comment fetching for ${channels.length} channels`);
-  }
-
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async handleCommentFetching() {
-    this.logger.debug('Running scheduled comment fetch check');
-  }
 
   @Cron(CronExpression.EVERY_HOUR)
   async processEmailSequences() {

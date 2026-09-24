@@ -255,5 +255,3 @@ export class EmailCaptureResponseDto {
   @ApiProperty()
   createdAt: Date;
 }
-
-import { IsBoolean } from 'class-validator';

@@ -3,7 +3,6 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
 import { QueueService, WebhookJobData, QueueName } from '@queue/queue.service';
-import { YouTubeService } from '../../youtube/youtube.service';
 import { WebhookEventType } from '@prisma/client';
 
 @Processor(QueueName.WEBHOOKS)
@@ -14,7 +13,6 @@ export class WebhookProcessor extends WorkerHost {
   constructor(
     private prisma: PrismaService,
     private queueService: QueueService,
-    private youtubeService: YouTubeService,
   ) {
     super();
   }
