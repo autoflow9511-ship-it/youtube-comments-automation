@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiParam,
+  ApiBody,
 } from '@nestjs/swagger';
 import { CommentMonitorService } from './services/comment-monitor.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -179,14 +181,11 @@ export class CommentsController {
     const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
     if (!comment) throw new NotFoundException('Comment not found');
 
-    // Verify ownership
     const channel = await this.prisma.channel.findFirst({
       where: { id: comment.channelId, userId },
     });
     if (!channel) throw new NotFoundException('Comment not found');
 
-    // This would use the YouTubeApiService to post the reply
-    // For now, just create the reply record
     const reply = await this.prisma.commentReply.create({
       data: {
         commentId,
@@ -195,9 +194,6 @@ export class CommentsController {
         status: 'pending',
       },
     });
-
-    // Queue the actual reply
-    // await this.queueService.addReplyJob({ replyId: reply.id });
 
     return reply;
   }
@@ -212,7 +208,6 @@ export class CommentsController {
     const comment = await this.prisma.comment.findUnique({ where: { id } });
     if (!comment) throw new NotFoundException('Comment not found');
 
-    // Verify ownership
     const channel = await this.prisma.channel.findFirst({
       where: { id: comment.channelId, userId },
     });
