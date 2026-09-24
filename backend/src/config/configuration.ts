@@ -76,7 +76,7 @@ export const appConfig = registerAs('app', (): AppConfig => ({
   nodeEnv: validateConfig('NODE_ENV', Environment, Environment.Development),
   port: parseInt(process.env.PORT || '3000', 10),
   apiPrefix: process.env.API_PREFIX || 'api/v1',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: process.env.FRONTEND_URL || 'https://youtube-comments-automation.vercel.app',
 }));
 
 export const databaseConfig = registerAs('database', (): DatabaseConfig => ({

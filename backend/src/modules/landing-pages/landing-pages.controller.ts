@@ -10,7 +10,6 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-  Res,
   Req,
 } from '@nestjs/common';
 import {
@@ -22,7 +21,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { LandingPagesService } from './services/landing-pages.service';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '@modules/auth/guards/optional-jwt-auth.guard';
@@ -177,23 +176,13 @@ export class LandingPagesController {
   // ============================================
 
   @Get('public/:slug')
-  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get public landing page by slug' })
   @ApiParam({ name: 'slug', description: 'Landing page slug' })
-  @ApiResponse({ status: 200, description: 'Rendered landing page HTML' })
+  @ApiResponse({ status: 200, description: 'Public landing page data' })
   @ApiResponse({ status: 404, description: 'Landing page not found' })
-  async getPublicLandingPage(
-    @Param('slug') slug: string,
-    @Res() res: Response,
-  ) {
-    const { page, html } = await this.landingPagesService.getPublicLandingPage(slug);
-    
-    // Set proper headers for HTML rendering
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    
-    return res.send(html);
+  async getPublicLandingPage(@Param('slug') slug: string) {
+    const { page } = await this.landingPagesService.getPublicLandingPage(slug);
+    return page;
   }
 
   @Post('public/:slug/submit')

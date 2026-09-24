@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@types';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-production.up.railway.app/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -180,6 +180,9 @@ export const landingPagesApi = {
   unpublish: (id: string) => api.post(`/landing-pages/${id}/unpublish`),
   getSubmissions: (id: string, params?: { page?: number; limit?: number }) =>
     api.get(`/landing-pages/${id}/submissions`, { params }),
+  getPublic: (slug: string) => api.get(`/landing-pages/public/${slug}`),
+  submitPublic: (slug: string, formData: Record<string, any>, utmParams?: Record<string, any>) =>
+    api.post(`/landing-pages/public/${slug}/submit`, { formData, utmParams }),
 };
 
 export const analyticsApi = {

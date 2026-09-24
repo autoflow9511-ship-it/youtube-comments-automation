@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { landingPagesApi } from '@services/api';
 import { LandingPage } from '@types';
 import { LoadingScreen } from '@components/ui/LoadingScreen';
@@ -17,20 +17,17 @@ interface FormData {
 
 export function LandingPagePublic() {
   const { slug } = useParams<{ slug: string }>();
-  const queryClient = useQueryClient();
   const [page, setPage] = useState<LandingPage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState<FormData>({ email: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const submitMutation = useMutation({
-    mutationFn: (data: { landingPageId: string; formData: FormData }) =>
-      landingPagesApi.submitForm(data.landingPageId, data.formData),
+    mutationFn: (data: { slug: string; formData: FormData }) =>
+      landingPagesApi.submitPublic(data.slug, data.formData),
     onSuccess: () => {
       setSubmitted(true);
-      setFormData({ email: '' });
       toast.success('Thanks for subscribing!');
     },
     onError: (error: any) => {
@@ -41,10 +38,8 @@ export function LandingPagePublic() {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || '/api/v1'}/lp/${slug}/public`);
-        if (!response.ok) throw new Error('Page not found');
-        const data = await response.json();
-        setPage(data);
+        const response = await landingPagesApi.getPublic(slug!);
+        setPage(response.data);
       } catch (error) {
         console.error('Failed to load landing page', error);
       } finally {
@@ -54,27 +49,16 @@ export function LandingPagePublic() {
     fetchPage();
   }, [slug]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const form = e.target as HTMLFormElement;
+    const submitted = Object.fromEntries(new FormData(form).entries()) as FormData;
+    if (!submitted.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(submitted.email))) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
     setSubmitting(true);
-    submitMutation.mutate({ landingPageId: page!.id, formData });
-  };
-
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setErrors(prev => ({ ...prev, [field]: '' }));
+    submitMutation.mutate({ slug: slug!, formData: submitted });
   };
 
   if (loading) return <LoadingScreen />;
@@ -91,6 +75,7 @@ export function LandingPagePublic() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div
         className="prose dark:prose-invert max-w-none mx-auto p-4 md:p-8"
+        onSubmitCapture={handleSubmit}
         dangerouslySetInnerHTML={{ __html: renderedHtml }}
       />
       <style dangerouslySetInnerHTML={{ __html: `
