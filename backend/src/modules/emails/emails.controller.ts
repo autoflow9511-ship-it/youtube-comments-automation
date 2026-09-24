@@ -67,7 +67,7 @@ export class EmailsController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateEmailSequenceDto,
   ) {
-    return this.emailsService.createEmailSequence(userId, dto);
+    return this.emailsService.createEmailSequence(userId, { ...dto, triggerConfig: dto.triggerConfig || {} });
   }
 
   @Get('sequences/:id')

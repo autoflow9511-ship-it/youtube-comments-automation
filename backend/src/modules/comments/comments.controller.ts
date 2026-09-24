@@ -23,13 +23,14 @@ import { CommentMonitorService } from './services/comment-monitor.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Comment } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
 
 @ApiTags('Comments')
 @Controller('comments')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class CommentsController {
-  constructor(private commentMonitorService: CommentMonitorService) {}
+  constructor(private commentMonitorService: CommentMonitorService, private prisma: PrismaService) {}
 
   @Get()
   @ApiOperation({ 
@@ -78,16 +79,19 @@ export class CommentsController {
       if (toDate) where.publishedAt.lte = new Date(toDate);
     }
 
-    const [comments, total] = await this.prisma.comment.findManyAndCount({
-      where,
-      skip,
-      take,
-      orderBy: { publishedAt: 'desc' },
-      include: {
-        channel: { select: { id: true, title: true, thumbnailUrl: true } },
-        replies: true,
-      },
-    });
+    const [comments, total] = await Promise.all([
+      this.prisma.comment.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { publishedAt: 'desc' },
+        include: {
+          channel: { select: { id: true, title: true, thumbnailUrl: true } },
+          replies: true,
+        },
+      }),
+      this.prisma.comment.count({ where }),
+    ]);
 
     return {
       data: comments,

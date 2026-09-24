@@ -54,7 +54,7 @@ export class LandingPagesController {
     @Query('limit') limit?: number,
     @Query('status') status?: LandingPageStatus,
   ) {
-    return this.landingPagesService.getLandingPages(userId, { page, limit, status });
+    return this.landingPagesService.findAll(userId, { page, limit, status });
   }
 
   @Post()
@@ -80,7 +80,7 @@ export class LandingPagesController {
       seoImage?: string;
     },
   ) {
-    return this.landingPagesService.createLandingPage(userId, body);
+    return this.landingPagesService.create(userId, body);
   }
 
   @Get(':id')
@@ -91,7 +91,7 @@ export class LandingPagesController {
   @ApiResponse({ status: 200, description: 'Landing page details' })
   @ApiResponse({ status: 404, description: 'Landing page not found' })
   async getLandingPage(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.getLandingPage(userId, id);
+    return this.landingPagesService.findById(userId, id);
   }
 
   @Put(':id')
@@ -106,7 +106,7 @@ export class LandingPagesController {
     @Param('id') id: string,
     @Body() body: any,
   ) {
-    return this.landingPagesService.updateLandingPage(userId, id, body);
+    return this.landingPagesService.update(userId, id, body);
   }
 
   @Delete(':id')
@@ -118,7 +118,7 @@ export class LandingPagesController {
   @ApiResponse({ status: 200, description: 'Landing page deleted' })
   @ApiResponse({ status: 404, description: 'Landing page not found' })
   async deleteLandingPage(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.deleteLandingPage(userId, id);
+    return this.landingPagesService.delete(userId, id);
   }
 
   @Post(':id/publish')
@@ -130,7 +130,7 @@ export class LandingPagesController {
   @ApiResponse({ status: 200, description: 'Landing page published' })
   @ApiResponse({ status: 404, description: 'Landing page not found' })
   async publishLandingPage(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.publishLandingPage(userId, id);
+    return this.landingPagesService.publish(userId, id);
   }
 
   @Post(':id/unpublish')
@@ -142,7 +142,7 @@ export class LandingPagesController {
   @ApiResponse({ status: 200, description: 'Landing page unpublished' })
   @ApiResponse({ status: 404, description: 'Landing page not found' })
   async unpublishLandingPage(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.unpublishLandingPage(userId, id);
+    return this.landingPagesService.unpublish(userId, id);
   }
 
   @Get(':id/submissions')
@@ -169,7 +169,7 @@ export class LandingPagesController {
   @ApiParam({ name: 'id', description: 'Landing page ID' })
   @ApiResponse({ status: 200, description: 'Landing page statistics' })
   async getStats(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.getLandingPageStats(userId, id);
+    return this.landingPagesService.findByIdStats(userId, id);
   }
 
   // ============================================

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '@database/prisma.service';
 import { QueueService } from '@queue/queue.service';
@@ -7,7 +7,7 @@ import { EmailsService } from '@modules/emails/services/emails.service';
 import { ChannelStatus, EmailStatus } from '@prisma/client';
 
 @Injectable()
-export class SchedulerService implements OnModuleInit {
+export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
@@ -127,7 +127,7 @@ export class SchedulerService implements OnModuleInit {
     });
 
     for (const channel of channels) {
-      await this.youtubeService.refreshAccessToken(channel.id);
+      await this.youtubeService.getValidAccessToken(channel.id);
     }
 
     this.logger.log(`Refreshed tokens for ${channels.length} channels`);

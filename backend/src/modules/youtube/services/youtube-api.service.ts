@@ -293,39 +293,23 @@ export class YouTubeApiService {
     channelId: string,
     accessToken: string,
     refreshToken?: string,
-    options?: {
-      videoId?: string;
-      pageToken?: string;
-      maxResults?: number;
-      order?: 'time' | 'relevance';
-      searchTerms?: string;
-    },
-  ): Promise<{ items: CommentThread[]; nextPageToken?: string }> {
+    options?: { pageToken?: string; maxResults?: number; videoId?: string; searchTerms?: string },
+  ) {
     const oauth2Client = this.createOAuth2Client(accessToken, refreshToken);
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
-    const params: youtube_v3.Params$Resource$Commentthreads$List = {
+    const response = await youtube.commentThreads.list({
       part: ['snippet', 'replies'],
       allThreadsRelatedToChannelId: channelId,
       maxResults: options?.maxResults || 50,
       pageToken: options?.pageToken,
-      order: options?.order || 'time',
+      order: 'time',
       textFormat: 'plainText',
-    };
-
-    if (options?.videoId) {
-      params.videoId = options.videoId;
-    }
-
-    if (options?.searchTerms) {
-      params.searchTerms = options.searchTerms;
-    }
-
-    const response = await youtube.commentThreads.list(params);
-
+      ...(options?.videoId ? { videoId: options.videoId } : {}),
+      ...(options?.searchTerms ? { searchTerms: options.searchTerms } : {}),
+    });
     return {
       items: (response.data.items || []).map(item => ({
-        id: item.id!,
+        id: item.id || '',
         snippet: {
           channelId: item.snippet?.channelId || '',
           videoId: item.snippet?.videoId || '',
@@ -348,24 +332,20 @@ export class YouTubeApiService {
           isPublic: item.snippet?.isPublic || false,
         },
         replies: item.replies ? {
-          comments: item.replies.comments.map(reply => ({
-            id: reply.id!,
+          comments: (item.replies.comments || []).map(reply => ({
+            id: reply.id || '',
             snippet: {
-              channelId: reply.snippet?.channelId || '',
-              videoId: reply.snippet?.videoId || '',
+              channelId: reply.snippet?.channelId || '', videoId: reply.snippet?.videoId || '',
               authorChannelId: { value: reply.snippet?.authorChannelId?.value || '' },
               authorDisplayName: reply.snippet?.authorDisplayName || '',
               authorProfileImageUrl: reply.snippet?.authorProfileImageUrl || '',
-              textDisplay: reply.snippet?.textDisplay || '',
-              textOriginal: reply.snippet?.textOriginal || '',
-              likeCount: reply.snippet?.likeCount || 0,
-              publishedAt: reply.snippet?.publishedAt || '',
-              updatedAt: reply.snippet?.updatedAt || '',
-              parentId: reply.snippet?.parentId || '',
+              textDisplay: reply.snippet?.textDisplay || '', textOriginal: reply.snippet?.textOriginal || '',
+              likeCount: reply.snippet?.likeCount || 0, publishedAt: reply.snippet?.publishedAt || '',
+              updatedAt: reply.snippet?.updatedAt || '', parentId: reply.snippet?.parentId || '',
             },
           })),
         } : undefined,
-      }),
+      })),
       nextPageToken: response.data.nextPageToken,
     };
   }
@@ -484,7 +464,11 @@ export class YouTubeApiService {
         publishedAt: video.snippet?.publishedAt || '',
         channelId: video.snippet?.channelId || '',
         channelTitle: video.snippet?.channelTitle || '',
-        thumbnails: video.snippet?.thumbnails || {},
+        thumbnails: {
+          default: { url: video.snippet?.thumbnails?.default?.url || '' },
+          medium: { url: video.snippet?.thumbnails?.medium?.url || '' },
+          high: { url: video.snippet?.thumbnails?.high?.url || '' },
+        },
       },
       statistics: {
         viewCount: video.statistics?.viewCount || '0',

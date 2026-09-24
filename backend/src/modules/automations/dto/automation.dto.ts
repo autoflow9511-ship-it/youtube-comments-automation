@@ -32,6 +32,10 @@ export class CreateAutomationActionDto {
 }
 
 export class CreateAutomationDto {
+  @ApiProperty({ description: 'YouTube channel ID to monitor' })
+  @IsString()
+  channelId: string;
+
   @ApiProperty({ example: 'Welcome new subscribers' })
   @IsString()
   @MinLength(1)

@@ -174,7 +174,13 @@ export class AutomationsController {
     @Param('id') id: string,
     @Body() dto: TriggerAutomationDto,
   ) {
-    return this.automationEngine.executeAutomation(id, dto.triggerData);
+    return this.automationEngine.executeAutomation({
+      automationId: id,
+      triggerData: dto.triggerData,
+      channelId: '',
+      userId,
+      executionId: '',
+    });
   }
 
   @Get(':id/executions')

@@ -200,6 +200,41 @@ export class LandingPagesService {
     return { submission, emailCapture };
   }
 
+  async getPublicLandingPage(slug: string) {
+    const page = await this.prisma.landingPage.findFirst({
+      where: { slug, status: LandingPageStatus.PUBLISHED, deletedAt: null },
+    });
+    if (!page) throw new NotFoundException('Landing page not found or not published');
+    return { page, html: this.renderHtml(page) };
+  }
+
+  private renderHtml(page: any): string {
+    return page.htmlContent
+      .replace(/\\{\\{title\\}\\}/g, page.title)
+      .replace(/\\{\\{description\\}\\}/g, page.description || '')
+      .replace(/\\{\\{formFields\\}\\}/g, this.renderFormFields(page.formFields || []))
+      .replace(/\\{\\{css\\}\\}/g, page.cssContent || '')
+      .replace(/\\{\\{js\\}\\}/g, page.jsContent || '');
+  }
+
+  private renderFormFields(fields: any[]): string {
+    return fields.map(field => {
+      const required = field.required ? ' required' : '';
+      if (field.type === 'textarea') return '<label>' + field.label + '<textarea name="' + field.name + '"' + required + '></textarea></label>';
+      return '<label>' + field.label + '<input type="' + (field.type || 'text') + '" name="' + field.name + '"' + required + '></label>';
+    }).join('');
+  }
+
+  async getLandingPageStats(userId: string, id: string) {
+    const page = await this.prisma.landingPage.findFirst({ where: { id, userId, deletedAt: null } });
+    if (!page) throw new NotFoundException('Landing page not found');
+    const [submissions, uniqueEmails] = await Promise.all([
+      this.prisma.landingPageSubmission.count({ where: { landingPageId: id } }),
+      this.prisma.emailCapture.count({ where: { landingPageId: id } }),
+    ]);
+    return { submissions, uniqueEmails };
+  }
+
   async submitPublicForm(slug: string, formData: Record<string, any>, options: {
     ipAddress?: string;
     userAgent?: string;
