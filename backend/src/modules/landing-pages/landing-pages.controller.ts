@@ -169,7 +169,7 @@ export class LandingPagesController {
   @ApiParam({ name: 'id', description: 'Landing page ID' })
   @ApiResponse({ status: 200, description: 'Landing page statistics' })
   async getStats(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    return this.landingPagesService.findByIdStats(userId, id);
+    return this.landingPagesService.getLandingPageStats(userId, id);
   }
 
   // ============================================

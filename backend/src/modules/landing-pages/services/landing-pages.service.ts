@@ -1,25 +1,50 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../database/prisma.service';
-import { QueueService } from '../../../queue/queue.service';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '@database/prisma.service';
 import { LandingPageStatus } from '@prisma/client';
-import { StringUtils } from '../../../common/utils/string.utils';
+import { StringUtils } from '@common/utils/string.utils';
 
 @Injectable()
 export class LandingPagesService {
-  private readonly logger = new Logger(LandingPagesService.name);
+  constructor(private prisma: PrismaService) {}
 
-  constructor(
-    private prisma: PrismaService,
-    private queueService: QueueService,
-    private configService: ConfigService,
-  ) {}
+  async findAll(userId: string, params: {
+    page?: number;
+    limit?: number;
+    status?: LandingPageStatus;
+  }) {
+    const { page = 1, limit = 20, status } = params;
+    const skip = (page - 1) * limit;
 
-  // ============================================
-  // LANDING PAGE MANAGEMENT
-  // ============================================
+    const where: any = { userId, deletedAt: null };
+    if (status) where.status = status;
 
-  async createLandingPage(userId: string, data: {
+    const [pages, total] = await Promise.all([
+      this.prisma.landingPage.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: { select: { submissions: true } },
+        },
+      }),
+      this.prisma.landingPage.count({ where }),
+    ]);
+
+    return { data: pages, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+  }
+
+  async findById(userId: string, id: string) {
+    const page = await this.prisma.landingPage.findFirst({
+      where: { id, userId, deletedAt: null },
+      include: { submissions: { orderBy: { createdAt: 'desc' }, take: 10 } },
+    });
+
+    if (!page) throw new NotFoundException('Landing page not found');
+    return page;
+  }
+
+  async create(userId: string, data: {
     channelId?: string;
     name: string;
     title: string;
@@ -28,27 +53,16 @@ export class LandingPagesService {
     cssContent?: string;
     jsContent?: string;
     formFields: any[];
-    settings?: Record<string, any>;
-    seoTitle?: string;
-    seoDescription?: string;
-    seoImage?: string;
+    settings?: any;
   }) {
     const slug = StringUtils.generateSlug(data.name);
-    
-    // Check for unique slug
-    let uniqueSlug = slug;
-    let counter = 1;
-    while (await this.prisma.landingPage.findUnique({ where: { slug: uniqueSlug } })) {
-      uniqueSlug = `${slug}-${counter}`;
-      counter++;
-    }
 
     return this.prisma.landingPage.create({
       data: {
         userId,
         channelId: data.channelId,
         name: data.name,
-        slug: uniqueSlug,
+        slug,
         title: data.title,
         description: data.description,
         htmlContent: data.htmlContent,
@@ -56,19 +70,15 @@ export class LandingPagesService {
         jsContent: data.jsContent,
         formFields: data.formFields,
         settings: data.settings || {},
-        seoTitle: data.seoTitle,
-        seoDescription: data.seoDescription,
-        seoImage: data.seoImage,
         status: LandingPageStatus.DRAFT,
       },
     });
   }
 
-  async updateLandingPage(userId: string, id: string, data: any) {
+  async update(userId: string, id: string, data: any) {
     const page = await this.prisma.landingPage.findFirst({
       where: { id, userId, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found');
 
     return this.prisma.landingPage.update({
@@ -90,11 +100,10 @@ export class LandingPagesService {
     });
   }
 
-  async deleteLandingPage(userId: string, id: string) {
+  async delete(userId: string, id: string) {
     const page = await this.prisma.landingPage.findFirst({
       where: { id, userId, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found');
 
     return this.prisma.landingPage.update({
@@ -103,46 +112,13 @@ export class LandingPagesService {
     });
   }
 
-  async getLandingPages(userId: string, options?: { page?: number; limit?: number; status?: string }) {
-    const page = options?.page || 1;
-    const limit = Math.min(options?.limit || 20, 100);
-    const skip = (page - 1) * limit;
-
-    const where: any = { userId, deletedAt: null };
-    if (options?.status) where.status = options.status;
-
-    const [pages, total] = await Promise.all([
-      this.prisma.landingPage.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: { _count: { select: { submissions: true } } },
-      }),
-      this.prisma.landingPage.count({ where }),
-    ]);
-
-    return { data: pages, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
-  }
-
-  async getLandingPage(userId: string, id: string) {
-    const page = await this.prisma.landingPage.findFirst({
-      where: { id, userId, deletedAt: null },
-      include: { submissions: { orderBy: { createdAt: 'desc' }, take: 10 } },
-    });
-
-    if (!page) throw new NotFoundException('Landing page not found');
-    return page;
-  }
-
-  async publishLandingPage(userId: string, id: string) {
+  async publish(userId: string, id: string) {
     const page = await this.prisma.landingPage.findFirst({
       where: { id, userId, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found');
 
-    const baseUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const publishUrl = `${baseUrl}/lp/${page.slug}`;
 
     return this.prisma.landingPage.update({
@@ -155,11 +131,10 @@ export class LandingPagesService {
     });
   }
 
-  async unpublishLandingPage(userId: string, id: string) {
+  async unpublish(userId: string, id: string) {
     const page = await this.prisma.landingPage.findFirst({
       where: { id, userId, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found');
 
     return this.prisma.landingPage.update({
@@ -168,29 +143,24 @@ export class LandingPagesService {
     });
   }
 
-  // ============================================
-  // FORM SUBMISSION HANDLING
-  // ============================================
-
   async submitForm(pageId: string, data: {
-    formData: Record<string, any>;
+    formData: any;
     ipAddress?: string;
     userAgent?: string;
     referrer?: string;
-    utmParams?: Record<string, any>;
+    utmParams?: any;
   }) {
     const page = await this.prisma.landingPage.findUnique({
       where: { id: pageId, status: LandingPageStatus.PUBLISHED, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found or not published');
 
+    // Create email capture
     const email = data.formData.email;
     if (!email) throw new BadRequestException('Email is required');
 
-    // Create or get email capture
     let emailCapture = await this.prisma.emailCapture.findFirst({
-      where: { userId: page.userId, email: email.toLowerCase() },
+      where: { userId: page.userId, email },
     });
 
     if (!emailCapture) {
@@ -199,7 +169,7 @@ export class LandingPagesService {
           userId: page.userId,
           channelId: page.channelId,
           landingPageId: page.id,
-          email: email.toLowerCase(),
+          email,
           firstName: data.formData.firstName,
           lastName: data.formData.lastName,
           customFields: data.formData,
@@ -212,7 +182,7 @@ export class LandingPagesService {
       });
     }
 
-    // Create submission record
+    // Create submission
     const submission = await this.prisma.landingPageSubmission.create({
       data: {
         landingPageId: page.id,
@@ -225,22 +195,76 @@ export class LandingPagesService {
       },
     });
 
-    // Trigger email sequences if configured
-    // This would be handled by the emails service
-    // await this.queueService.addSequenceTriggerJob({ landingPageId: page.id, emailCaptureId: emailCapture.id });
+    // TODO: Trigger email sequence if configured
 
     return { submission, emailCapture };
   }
 
-  async getSubmissions(userId: string, pageId: string, options?: { page?: number; limit?: number }) {
+  async getPublicLandingPage(slug: string) {
+    const page = await this.prisma.landingPage.findFirst({
+      where: { slug, status: LandingPageStatus.PUBLISHED, deletedAt: null },
+    });
+    if (!page) throw new NotFoundException('Landing page not found or not published');
+    return { page, html: this.renderHtml(page) };
+  }
+
+  private renderHtml(page: any): string {
+    return page.htmlContent
+      .replace(/\\{\\{title\\}\\}/g, page.title)
+      .replace(/\\{\\{description\\}\\}/g, page.description || '')
+      .replace(/\\{\\{formFields\\}\\}/g, this.renderFormFields(page.formFields || []))
+      .replace(/\\{\\{css\\}\\}/g, page.cssContent || '')
+      .replace(/\\{\\{js\\}\\}/g, page.jsContent || '');
+  }
+
+  private renderFormFields(fields: any[]): string {
+    return fields.map(field => {
+      const required = field.required ? ' required' : '';
+      if (field.type === 'textarea') return '<label>' + field.label + '<textarea name="' + field.name + '"' + required + '></textarea></label>';
+      return '<label>' + field.label + '<input type="' + (field.type || 'text') + '" name="' + field.name + '"' + required + '></label>';
+    }).join('');
+  }
+
+  async getLandingPageStats(userId: string, id: string) {
+    const page = await this.prisma.landingPage.findFirst({ where: { id, userId, deletedAt: null } });
+    if (!page) throw new NotFoundException('Landing page not found');
+    const [submissions, uniqueEmails] = await Promise.all([
+      this.prisma.landingPageSubmission.count({ where: { landingPageId: id } }),
+      this.prisma.emailCapture.count({ where: { landingPageId: id } }),
+    ]);
+    return { submissions, uniqueEmails };
+  }
+
+  async submitPublicForm(slug: string, formData: Record<string, any>, options: {
+    ipAddress?: string;
+    userAgent?: string;
+    referrer?: string;
+    utmParams?: Record<string, any>;
+  }) {
+    const page = await this.prisma.landingPage.findUnique({
+      where: { slug, status: LandingPageStatus.PUBLISHED, deletedAt: null },
+    });
+    if (!page) throw new NotFoundException('Landing page not found or not published');
+
+    return this.submitForm(page.id, {
+      formData,
+      ipAddress: options.ipAddress,
+      userAgent: options.userAgent,
+      referrer: options.referrer,
+      utmParams: options.utmParams,
+    });
+  }
+
+  async getSubmissions(userId: string, pageId: string, params: {
+    page?: number;
+    limit?: number;
+  }) {
     const page = await this.prisma.landingPage.findFirst({
       where: { id: pageId, userId, deletedAt: null },
     });
-
     if (!page) throw new NotFoundException('Landing page not found');
 
-    const pageNum = options?.page || 1;
-    const limit = Math.min(options?.limit || 50, 100);
+    const { page: pageNum = 1, limit = 50 } = params;
     const skip = (pageNum - 1) * limit;
 
     const [submissions, total] = await Promise.all([
@@ -255,91 +279,5 @@ export class LandingPagesService {
     ]);
 
     return { data: submissions, meta: { total, page: pageNum, limit, totalPages: Math.ceil(total / limit) } };
-  }
-
-  // ============================================
-  // PUBLIC LANDING PAGE RENDERING
-  // ============================================
-
-  async getPublicLandingPage(slug: string) {
-    const page = await this.prisma.landingPage.findUnique({
-      where: { slug, status: LandingPageStatus.PUBLISHED, deletedAt: null },
-    });
-
-    if (!page) throw new NotFoundException('Landing page not found');
-
-    // Render the page with form fields
-    const renderedHtml = this.renderPage(page);
-
-    return { page, html: renderedHtml };
-  }
-
-  private renderPage(page: any): string {
-    // Generate form HTML from formFields
-    const formFieldsHtml = page.formFields.map((field: any, index: number) => {
-      const required = field.required ? 'required' : '';
-      const name = field.name;
-      const label = field.label;
-      const type = field.type || 'text';
-      const placeholder = field.placeholder || label;
-
-      let inputHtml = '';
-      switch (type) {
-        case 'email':
-          inputHtml = `<input type="email" name="${name}" id="${name}" placeholder="${placeholder}" ${required} />`;
-          break;
-        case 'textarea':
-          inputHtml = `<textarea name="${name}" id="${name}" placeholder="${placeholder}" ${required}></textarea>`;
-          break;
-        case 'select':
-          const options = field.options?.map((opt: string) => `<option value="${opt}">${opt}</option>`).join('') || '';
-          inputHtml = `<select name="${name}" id="${name}" ${required}>${options}</select>`;
-          break;
-        case 'checkbox':
-          inputHtml = `<input type="checkbox" name="${name}" id="${name}" ${required} />`;
-          break;
-        default:
-          inputHtml = `<input type="text" name="${name}" id="${name}" placeholder="${placeholder}" ${required} />`;
-      }
-
-      return `
-        <div class="form-field">
-          <label for="${name}">${label} ${field.required ? '<span class="required">*</span>' : ''}</label>
-          ${inputHtml}
-        </div>
-      `;
-    }).join('');
-
-    const html = page.htmlContent
-      .replace(/\{\{title\}\}/g, page.title)
-      .replace(/\{\{description\}\}/g, page.description || '')
-      .replace(/\{\{formFields\}\}/g, formFieldsHtml)
-      .replace(/\{\{css\}\}/g, page.cssContent || '')
-      .replace(/\{\{js\}\}/g, page.jsContent || '');
-
-    return html;
-  }
-
-  async getLandingPageStats(userId: string, id: string) {
-    const page = await this.prisma.landingPage.findFirst({
-      where: { id, userId, deletedAt: null },
-    });
-
-    if (!page) throw new NotFoundException('Landing page not found');
-
-    const [totalSubmissions, uniqueEmails, conversionRate] = await Promise.all([
-      this.prisma.landingPageSubmission.count({ where: { landingPageId: id } }),
-      this.prisma.landingPageSubmission.findMany({
-        where: { landingPageId: id },
-        select: { emailCapture: { select: { email: true } } },
-        distinct: ['emailCaptureId'],
-      }).then(r => r.length),
-      this.prisma.landingPageSubmission.count({ where: { landingPageId: id } }).then(total => {
-        // Would need page views to calculate proper conversion rate
-        return total > 0 ? 'N/A' : '0%';
-      }),
-    ]);
-
-    return { totalSubmissions, uniqueEmails, conversionRate };
   }
 }

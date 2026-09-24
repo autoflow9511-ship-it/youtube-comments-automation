@@ -525,7 +525,11 @@ export class YouTubeApiService {
           publishedAt: video.snippet?.publishedAt || '',
           channelId: video.snippet?.channelId || '',
           channelTitle: video.snippet?.channelTitle || '',
-          thumbnails: video.snippet?.thumbnails || {},
+          thumbnails: {
+            default: { url: video.snippet?.thumbnails?.default?.url || '' },
+            medium: { url: video.snippet?.thumbnails?.medium?.url || '' },
+            high: { url: video.snippet?.thumbnails?.high?.url || '' },
+          },
         },
         statistics: {
           viewCount: video.statistics?.viewCount || '0',

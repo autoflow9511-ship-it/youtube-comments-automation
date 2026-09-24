@@ -158,7 +158,7 @@ export class CommentsController {
       where: { id, channelId: { in: channelIds } },
       include: {
         channel: { select: { id: true, title: true, thumbnailUrl: true } },
-        replies: { orderBy: { publishedAt: 'asc' } },
+        replies: { orderBy: { createdAt: 'asc' } },
         automationExecution: true,
       },
     });
