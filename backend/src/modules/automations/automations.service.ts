@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { AutomationStatus, TriggerType, ActionType } from '@prisma/client';
+import { AutomationStatus, TriggerType, ActionType } from '@database/prisma-compat';
 import { StringUtils } from '@common/utils/string.utils';
 
 @Injectable()
