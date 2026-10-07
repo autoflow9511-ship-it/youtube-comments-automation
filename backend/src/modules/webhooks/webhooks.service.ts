@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { WebhookEventType } from '@prisma/client';
+import { WebhookEventType } from '@database/prisma-compat';
 import { google } from 'googleapis';
 
 @Injectable()
