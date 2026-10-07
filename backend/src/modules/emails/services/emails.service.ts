@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../database/prisma.service';
 import { QueueService } from '../../../queue/queue.service';
 import * as nodemailer from 'nodemailer';
-import { EmailStatus, EmailProvider } from '@prisma/client';
+import { EmailStatus, EmailProvider } from '@database/prisma-compat';
 import { EncryptionService } from '../../../common/services/encryption.service';
 
 @Injectable()
