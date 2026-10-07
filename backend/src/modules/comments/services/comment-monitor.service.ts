@@ -366,10 +366,12 @@ export class CommentMonitorService {
       },
     });
 
-    await this.queueService.addAutomationJob({
+    await this.automationEngine.executeAutomation({
       executionId: execution.id,
       automationId,
-      triggerData,
+      triggerData: triggerData as any,
+      channelId: automation.channelId,
+      userId,
     });
 
     return execution;
