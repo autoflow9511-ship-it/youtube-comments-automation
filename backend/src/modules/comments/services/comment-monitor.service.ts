@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../database/prisma.service';
 import { YouTubeApiService } from '../../youtube/services/youtube-api.service';
-import { QueueService, CommentJobData } from '../../../queue/queue.service';
+import { QueueService } from '../../../queue/queue.service';
+import { AutomationEngineService } from '../../automations/services/automation-engine.service';
 import { ChannelStatus, AutomationStatus, TriggerType } from '@database/prisma-compat';
 
 export interface CommentTriggerData {
@@ -24,6 +25,7 @@ export class CommentMonitorService {
     private prisma: PrismaService,
     private youtubeApiService: YouTubeApiService,
     private queueService: QueueService,
+    private automationEngine: AutomationEngineService,
   ) {}
 
   // ============================================
@@ -232,11 +234,12 @@ export class CommentMonitorService {
           },
         });
 
-        // Queue automation execution
-        await this.queueService.addAutomationJob({
+        await this.automationEngine.executeAutomation({
           executionId: execution.id,
           automationId: automation.id,
           triggerData,
+          channelId: channel.id,
+          userId: channel.userId,
         });
 
         // Mark comment as processed
