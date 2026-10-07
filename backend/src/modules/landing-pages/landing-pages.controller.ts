@@ -26,7 +26,7 @@ import { LandingPagesService } from './services/landing-pages.service';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '@modules/auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
-import { LandingPageStatus } from '@prisma/client';
+import { LandingPageStatus } from '@database/prisma-compat';
 
 @ApiTags('Landing Pages')
 @Controller('landing-pages')
