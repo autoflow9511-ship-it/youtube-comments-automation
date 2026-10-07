@@ -5,6 +5,7 @@ import { ConfigModule } from '@config/config.module';
 import { PrismaModule } from '@database/prisma.module';
 import { CommonModule } from '@common/common.module';
 import { QueueModule } from '@queue/queue.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '@modules/auth/auth.module';
 import { UsersModule } from '@modules/users/users.module';
 import { ChannelsModule } from '@modules/channels/channels.module';
@@ -25,7 +26,7 @@ import { RolesGuard } from '@guards/roles.guard';
 @Module({
   imports: [
     ConfigModule, PrismaModule, CommonModule,
-    QueueModule,
+    ScheduleModule.forRoot(), QueueModule,
     ThrottlerModule.forRoot([{ ttl: parseInt(process.env.THROTTLE_TTL || '60',10)*1000, limit: parseInt(process.env.THROTTLE_LIMIT || '100',10) }]),
     AuthModule, UsersModule, ChannelsModule, YouTubeModule, AutomationsModule, CommentsModule,
     EmailsModule, LandingPagesModule, WebhooksModule, AnalyticsModule, AdminModule, NotificationsModule,
