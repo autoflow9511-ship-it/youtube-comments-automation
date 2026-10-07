@@ -45,7 +45,7 @@ import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
-import { User } from '@prisma/client';
+import { User } from '@database/prisma-compat';
 
 @ApiTags('Authentication')
 @Controller('auth')
