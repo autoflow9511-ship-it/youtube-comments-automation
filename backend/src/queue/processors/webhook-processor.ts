@@ -3,7 +3,7 @@ import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
 import { QueueService, WebhookJobData, QueueName } from '@queue/queue.service';
-import { WebhookEventType } from '@prisma/client';
+import { WebhookEventType } from '@database/prisma-compat';
 
 @Processor(QueueName.WEBHOOKS)
 @Injectable()
