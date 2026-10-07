@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsNumber, Min, IsEmail, IsObject, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EmailStatus, EmailProvider } from '@prisma/client';
+import { EmailStatus, EmailProvider } from '@database/prisma-compat';
 
 export class EmailSequenceStepDto {
   @ApiProperty({ example: 0 })
