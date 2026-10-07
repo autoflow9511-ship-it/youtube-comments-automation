@@ -4,7 +4,7 @@ import { PrismaService } from '@database/prisma.service';
 import { QueueService } from '@queue/queue.service';
 import { YouTubeApiService } from '@modules/youtube/services/youtube-api.service';
 import { EmailsService } from '@modules/emails/services/emails.service';
-import { ChannelStatus, EmailStatus } from '@prisma/client';
+import { ChannelStatus, EmailStatus } from '@database/prisma-compat';
 
 @Injectable()
 export class SchedulerService {
