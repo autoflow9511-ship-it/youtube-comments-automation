@@ -7,12 +7,11 @@ import { YouTubeModule } from '../youtube/youtube.module';
 import { EmailsModule } from '../emails/emails.module';
 import { LandingPagesModule } from '../landing-pages/landing-pages.module';
 import { CommonModule } from '../../common/common.module';
-import { AutomationProcessor } from '../../queue/processors/automation-processor';
 
 @Module({
   imports: [PrismaModule, QueueModule, YouTubeModule, EmailsModule, LandingPagesModule, CommonModule],
   controllers: [AutomationsController],
-  providers: [AutomationEngineService, AutomationProcessor],
+  providers: [AutomationEngineService],
   exports: [AutomationEngineService],
 })
 export class AutomationsModule {}
