@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../database/prisma.service';
-import { User, UserRole } from '@prisma/client';
+import { User, UserRole } from '@database/prisma-compat';
 
 export interface RefreshTokenPayload {
   sub: string;
