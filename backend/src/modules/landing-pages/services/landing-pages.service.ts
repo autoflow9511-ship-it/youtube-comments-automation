@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
 import { PrismaService } from '@database/prisma.service';
 import { LandingPageStatus } from '@database/prisma-compat';
 import { StringUtils } from '@common/utils/string.utils';
 
 @Injectable()
 export class LandingPagesService {
+  private readonly logger = new Logger(LandingPagesService.name);
   constructor(private prisma: PrismaService) {}
 
   async findAll(userId: string, params: {
@@ -195,9 +197,116 @@ export class LandingPagesService {
       },
     });
 
-    // TODO: Trigger email sequence if configured
+    const emailActions = await this.prisma.automationAction.findMany({
+      where: { type: 'SEND_EMAIL' },
+      orderBy: { order: 'asc' },
+    });
+    const emailAction = emailActions.find((a: any) => a.config?.landingPageId === page.id || a.config?.formId === page.id);
+    let formSubmission: any = null;
+    let deliveryStatus = 'pending';
+    let deliveryError: string | undefined;
 
-    return { submission, emailCapture };
+    if (emailAction) {
+      const automation = await this.prisma.automation.findUnique({ where: { id: emailAction.automationId } });
+      if (automation) {
+        const existing = await this.prisma.formSubmission.findFirst({
+          where: { automationId: automation.id, email, videoId: data.formData.videoId || null },
+        });
+        if (existing) return { submission: existing, emailCapture, deliveryStatus: existing.deliveryStatus };
+
+        formSubmission = await this.prisma.formSubmission.create({
+          data: {
+            userId: automation.userId,
+            automationId: automation.id,
+            formId: page.id,
+            channelId: page.channelId,
+            videoId: data.formData.videoId,
+            commentId: data.formData.commentId,
+            emailCaptureId: emailCapture.id,
+            email,
+            firstName: data.formData.firstName,
+            lastName: data.formData.lastName,
+            customFields: data.formData,
+            ipAddress: data.ipAddress,
+            userAgent: data.userAgent,
+            referrer: data.referrer,
+            deliveryStatus: 'processing',
+          },
+        });
+
+        const cfg = emailAction.config || {};
+        const interpolate = (template: string) => String(template || '').replace(/\{\{(\w+)\}\}/g, (_m: string, key: string) => {
+          const value = data.formData[key];
+          return value === undefined ? _m : String(value);
+        });
+        const subject = interpolate(cfg.subject || 'YouTube automation response');
+        const htmlContent = interpolate(cfg.htmlContent || cfg.body || '');
+        const textContent = cfg.textContent ? interpolate(cfg.textContent) : undefined;
+
+        try {
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+          });
+          const result = await transporter.sendMail({
+            from: (process.env.SMTP_FROM_NAME || 'YouTube Automation') + ' <' + (process.env.SMTP_FROM || process.env.SMTP_USER) + '>',
+            to: email,
+            subject,
+            html: htmlContent,
+            text: textContent,
+          });
+
+          await this.prisma.formSubmission.update({
+            where: { id: formSubmission.id },
+            data: { deliveryStatus: 'sent' },
+          });
+          await this.prisma.emailLog.create({
+            data: {
+              userId: automation.userId,
+              emailCaptureId: emailCapture.id,
+              formSubmissionId: formSubmission.id,
+              toEmail: email,
+              fromEmail: process.env.SMTP_FROM || process.env.SMTP_USER,
+              subject,
+              htmlContent,
+              textContent,
+              status: 'SENT',
+              provider: 'SMTP',
+              providerMessageId: result.messageId,
+              sentAt: new Date(),
+            },
+          });
+          deliveryStatus = 'sent';
+        } catch (error: any) {
+          deliveryStatus = 'failed';
+          deliveryError = error?.message || 'Email delivery failed';
+          await this.prisma.formSubmission.update({
+            where: { id: formSubmission.id },
+            data: { deliveryStatus: 'failed', errorMessage: deliveryError },
+          });
+          await this.prisma.emailLog.create({
+            data: {
+              userId: automation.userId,
+              emailCaptureId: emailCapture.id,
+              formSubmissionId: formSubmission.id,
+              toEmail: email,
+              fromEmail: process.env.SMTP_FROM || process.env.SMTP_USER,
+              subject,
+              htmlContent,
+              textContent,
+              status: 'FAILED',
+              provider: 'SMTP',
+              error: deliveryError,
+            },
+          });
+          this.logger.error('Public form email failed: ' + deliveryError);
+        }
+      }
+    }
+
+    return { submission, formSubmission, emailCapture, deliveryStatus, deliveryError };
   }
 
   async getPublicLandingPage(slug: string) {
