@@ -48,9 +48,7 @@ export class CommentMonitorService {
 
     for (const channel of channels) {
       try {
-        await this.queueService.addCommentJob({
-          channelId: channel.id,
-        });
+        await this.fetchAndProcessComments(channel.id);
       } catch (error) {
         this.logger.error(`Failed to queue comment fetch for channel ${channel.id}`, error);
       }
