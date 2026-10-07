@@ -51,7 +51,7 @@ const FK: Record<string,string> = {
 };
 
 function idOf(v:any){ return v?.id ?? v?._id; }
-function clone(v:any){ return v==null ? v : JSON.parse(JSON.stringify(v)); }
+function clone(v:any){ return v==null ? v : structuredClone(v); }
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
