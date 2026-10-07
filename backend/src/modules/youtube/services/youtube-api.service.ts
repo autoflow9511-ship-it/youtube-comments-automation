@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { google, youtube_v3, Auth } from 'googleapis';
 import { PrismaService } from '../../../database/prisma.service';
 import { EncryptionService } from '../../../common/services/encryption.service';
-import { ChannelStatus } from '@prisma/client';
+import { ChannelStatus } from '@database/prisma-compat';
 
 export interface YouTubeChannelInfo {
   id: string;
