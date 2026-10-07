@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { LandingPageStatus } from '@prisma/client';
+import { LandingPageStatus } from '@database/prisma-compat';
 import { StringUtils } from '@common/utils/string.utils';
 
 @Injectable()
