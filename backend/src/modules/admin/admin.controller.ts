@@ -14,7 +14,7 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { Roles } from '@decorators/roles.decorator';
 import { CurrentUser } from '@decorators/current-user.decorator';
-import { UserRole, SubscriptionTier } from '@prisma/client';
+import { UserRole, SubscriptionTier } from '@database/prisma-compat';
 
 @ApiTags('Admin')
 @Controller('admin')
