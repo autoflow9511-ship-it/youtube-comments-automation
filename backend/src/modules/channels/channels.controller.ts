@@ -15,7 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { ChannelsService } from './channels.service';
 import { AuthGuard } from '@guards/auth.guard';
 import { CurrentUser } from '@decorators/current-user.decorator';
-import { ChannelStatus } from '@prisma/client';
+import { ChannelStatus } from '@database/prisma-compat';
 
 @ApiTags('Channels')
 @Controller('channels')
