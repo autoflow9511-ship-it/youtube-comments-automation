@@ -26,7 +26,7 @@ import { VideoSyncService } from './services/video-sync.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PrismaService } from '../../database/prisma.service';
-import { ChannelStatus } from '@prisma/client';
+import { ChannelStatus } from '@database/prisma-compat';
 
 @ApiTags('YouTube')
 @Controller('youtube')
