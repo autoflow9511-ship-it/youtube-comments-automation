@@ -13,7 +13,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { WebhooksService } from './webhooks.service';
 import { AuthGuard } from '@guards/auth.guard';
 import { CurrentUser } from '@decorators/current-user.decorator';
-import { WebhookEventType } from '@prisma/client';
+import { WebhookEventType } from '@database/prisma-compat';
 
 @ApiTags('Webhooks')
 @Controller('webhooks')
