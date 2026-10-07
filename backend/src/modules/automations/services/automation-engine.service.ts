@@ -10,7 +10,7 @@ import {
   TriggerType,
   ChannelStatus,
   EmailStatus,
-} from '@prisma/client';
+} from '@database/prisma-compat';
 
 export interface ExecutionContext {
   automationId: string;
@@ -201,6 +201,15 @@ export class AutomationEngineService {
 
       case ActionType.SEND_LANDING_PAGE_LINK:
         return this.executeSendLandingPageLink(action, context);
+
+      case ActionType.REPLY_WITH_FORM_LINK:
+        return this.executeReplyWithFormLink(action, context, accessToken);
+
+      case ActionType.DELAY:
+        return { success: true, outputData: { delayed: true, delayMs: Number(action.config?.delayMs || ((action.config?.delaySeconds || 0) * 1000)) } };
+
+      case ActionType.END:
+        return { success: true, outputData: { ended: true } };
 
       case ActionType.COLLECT_EMAIL:
         return this.executeCollectEmail(action, context);
