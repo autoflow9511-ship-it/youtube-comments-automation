@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole, SubscriptionTier } from '@prisma/client';
+import { UserRole, SubscriptionTier } from '@database/prisma-compat';
 
 export class UserResponseDto {
   @ApiProperty({ example: 'clx1234567890' })
