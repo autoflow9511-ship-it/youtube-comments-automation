@@ -106,9 +106,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     if(v===null || typeof v!=='object' || Array.isArray(v)) return v;
     const o:any={};
     for(const [k,val] of Object.entries(v)){
-      const nk={contains:'$regex',startsWith:'$regex',endsWith:'$regex',gte:'$gte',gt:'$gt',lte:'$lte',lt:'$lt',in:'$in',notIn:'$nin',not:'$ne'}[k]||k;
+      const nk={contains:'$regex',startsWith:'$regex',endsWith:'$regex',gte:'$gte',gt:'$gt',lte:'$lte',lt:'$lt',in:'$in',notIn:'$nin',not:'$ne',equals:'$eq',hasSome:'$in',hasEvery:'$all'}[k]||k;
       if(k==='contains'||k==='startsWith'||k==='endsWith'){o[nk]=new RegExp((k==='startsWith'?'^':'')+String(val).replace(/[.*+?^{}()|[\]\\]/g,'\\$&')+(k==='endsWith'?'$':''),'i');}
-      else if(k==='mode') continue; else if(k==='not'&&val===null)o.$ne=null; else o[nk]=this.translateFilter(val);
+      else if(k==='mode') continue; else if(k==='has') return val; else if(k==='not'&&val===null)o.$ne=null; else o[nk]=this.translateFilter(val);
     }
     return o;
   }
@@ -162,5 +162,5 @@ class MongoModel {
     for(const [k,v] of Object.entries(d)){if(v&&typeof v==='object'&&'create' in (v as any)){const rel=PARENT_RELATIONS[this.name]?.[k];if(rel){const arr=Array.isArray((v as any).create)?(v as any).create:[(v as any).create];const created=[];for(const child of arr)created.push(await this.db.getModel(rel).create({data:{...child,[FK[rel]]:d.id}}));d[k]=created.map(x=>x.id);}}else if(v&&typeof v==='object'&&'createMany' in (v as any)){const rel=PARENT_RELATIONS[this.name]?.[k];if(rel){await this.db.getModel(rel).createMany({data:(v as any).createMany.data.map((x:any)=>({...x,[FK[rel]]:d.id}))});delete d[k];}}}
     return d;
   }
-  private buildUpdate(data:any){const $set:any={},$unset:any={};for(const [k,v] of Object.entries(data)){if(v===undefined)continue;if(v===null)$unset[k]='';else if(v&&typeof v==='object'&&'increment' in (v as any)){$set[k]=(v as any).increment;}else $set[k]=v;}const u:any={};if(Object.keys($set).length)u.$set=$set;if(Object.keys($unset).length)u.$unset=$unset;return u;}
+  private buildUpdate(data:any){const $set:any={},$unset:any={},$inc:any={},$addToSet:any={};for(const [k,v] of Object.entries(data)){if(v===undefined)continue;if(v===null)$unset[k]='';else if(v&&typeof v==='object'&&'increment' in (v as any))$inc[k]=Number((v as any).increment);else if(v&&typeof v==='object'&&'push' in (v as any))$addToSet[k]={$each:Array.isArray((v as any).push)?(v as any).push:[(v as any).push]};else $set[k]=v;}const u:any={};if(Object.keys($set).length)u.$set=$set;if(Object.keys($unset).length)u.$unset=$unset;if(Object.keys($inc).length)u.$inc=$inc;if(Object.keys($addToSet).length)u.$addToSet=$addToSet;return u;}
 }
