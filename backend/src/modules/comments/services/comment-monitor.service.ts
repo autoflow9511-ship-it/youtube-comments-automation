@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../database/prisma.service';
 import { YouTubeApiService } from '../../youtube/services/youtube-api.service';
-import { QueueService } from '../../../queue/queue.service';
 import { AutomationEngineService } from '../../automations/services/automation-engine.service';
 import { ChannelStatus, AutomationStatus, TriggerType } from '@database/prisma-compat';
 
@@ -24,7 +23,6 @@ export class CommentMonitorService {
   constructor(
     private prisma: PrismaService,
     private youtubeApiService: YouTubeApiService,
-    private queueService: QueueService,
     private automationEngine: AutomationEngineService,
   ) {}
 
