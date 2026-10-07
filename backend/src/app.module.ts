@@ -25,49 +25,18 @@ import { RolesGuard } from '@guards/roles.guard';
 
 @Module({
   imports: [
-    ConfigModule,
-    PrismaModule,
-    CommonModule,
-    QueueModule,
-    SchedulerModule,
-    ThrottlerModule.forRoot([{
-      ttl: parseInt(process.env.THROTTLE_TTL || '60', 10) * 1000,
-      limit: parseInt(process.env.THROTTLE_LIMIT || '100', 10),
-    }]),
-    AuthModule,
-    UsersModule,
-    ChannelsModule,
-    YouTubeModule,
-    AutomationsModule,
-    CommentsModule,
-    EmailsModule,
-    LandingPagesModule,
-    WebhooksModule,
-    AnalyticsModule,
-    AdminModule,
-    NotificationsModule,
+    ConfigModule, PrismaModule, CommonModule,
+    QueueModule, SchedulerModule,
+    ThrottlerModule.forRoot([{ ttl: parseInt(process.env.THROTTLE_TTL || '60',10)*1000, limit: parseInt(process.env.THROTTLE_LIMIT || '100',10) }]),
+    AuthModule, UsersModule, ChannelsModule, YouTubeModule, AutomationsModule, CommentsModule,
+    EmailsModule, LandingPagesModule, WebhooksModule, AnalyticsModule, AdminModule, NotificationsModule,
   ],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_PIPE,
-      useClass: ValidationPipe,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    { provide: APP_PIPE, useClass: ValidationPipe },
   ],
 })
 export class AppModule {}
