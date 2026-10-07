@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../database/prisma.service';
 import { YouTubeApiService } from '../../youtube/services/youtube-api.service';
 import { QueueService, CommentJobData } from '../../../queue/queue.service';
-import { ChannelStatus, AutomationStatus, TriggerType } from '@prisma/client';
+import { ChannelStatus, AutomationStatus, TriggerType } from '@database/prisma-compat';
 
 export interface CommentTriggerData {
   commentId: string;
