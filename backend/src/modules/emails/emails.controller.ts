@@ -32,7 +32,7 @@ import {
   EmailLogResponseDto,
   EmailCaptureResponseDto,
 } from './dto/email.dto';
-import { EmailStatus } from '@prisma/client';
+import { EmailStatus } from '@database/prisma-compat';
 import { PrismaService } from '../../database/prisma.service';
 
 @ApiTags('Emails')
