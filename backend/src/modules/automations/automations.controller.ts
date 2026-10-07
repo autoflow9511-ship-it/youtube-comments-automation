@@ -33,7 +33,7 @@ import {
   AutomationExecutionResponseDto,
   ActionExecutionResponseDto,
 } from './dto/automation.dto';
-import { AutomationStatus, TriggerType } from '@prisma/client';
+import { AutomationStatus, TriggerType } from '@database/prisma-compat';
 
 @ApiTags('Automations')
 @Controller('automations')
