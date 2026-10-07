@@ -16,7 +16,7 @@ import {
   GoogleAuthDto,
   ConnectYouTubeChannelDto,
 } from './dto';
-import { UserRole, SubscriptionTier, ChannelStatus } from '@prisma/client';
+import { UserRole, SubscriptionTier, ChannelStatus } from '@database/prisma-compat';
 import { google } from 'googleapis';
 
 @Injectable()
