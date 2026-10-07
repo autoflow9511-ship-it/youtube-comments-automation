@@ -106,9 +106,14 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     if(v===null || typeof v!=='object' || Array.isArray(v)) return v;
     const o:any={};
     for(const [k,val] of Object.entries(v)){
-      const nk={contains:'$regex',startsWith:'$regex',endsWith:'$regex',gte:'$gte',gt:'$gt',lte:'$lte',lt:'$lt',in:'$in',notIn:'$nin',not:'$ne',equals:'$eq',hasSome:'$in',hasEvery:'$all'}[k]||k;
-      if(k==='contains'||k==='startsWith'||k==='endsWith'){o[nk]=new RegExp((k==='startsWith'?'^':'')+String(val).replace(/[.*+?^{}()|[\]\\]/g,'\\$&')+(k==='endsWith'?'$':''),'i');}
-      else if(k==='mode') continue; else if(k==='has') return val; else if(k==='not'&&val===null)o.$ne=null; else o[nk]=this.translateFilter(val);
+      const nk:any={contains:'$regex',startsWith:'$regex',endsWith:'$regex',gte:'$gte',gt:'$gt',lte:'$lte',lt:'$lt',in:'$in',notIn:'$nin',not:'$ne',equals:'$eq',hasSome:'$in',hasEvery:'$all'}[k]||k;
+      if(k==='contains'||k==='startsWith'||k==='endsWith'){
+        const escaped=String(val).replace(/[.*+?^{}()|[\\]\\]/g,'\\$&');
+        o[nk]=new RegExp((k==='startsWith'?'^':'')+escaped+(k==='endsWith'?'$':''),'i');
+      } else if(k==='mode') continue;
+      else if(k==='has') o.$all=[val];
+      else if(k==='not'&&val===null)o.$ne=null;
+      else o[nk]=this.translateFilter(val);
     }
     return o;
   }
