@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@database/prisma.service';
-import { ChannelStatus } from '@prisma/client';
+import { ChannelStatus } from '@database/prisma-compat';
 import { google } from 'googleapis';
 import { EncryptionService } from '@common/services/encryption.service';
 
