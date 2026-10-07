@@ -80,7 +80,7 @@ export const appConfig = registerAs('app', (): AppConfig => ({
 }));
 
 export const databaseConfig = registerAs('database', (): DatabaseConfig => ({
-  url: process.env.DATABASE_URL || '',
+  url: process.env.MONGODB_URI || '',
 }));
 
 export const redisConfig = registerAs('redis', (): RedisConfig => ({
