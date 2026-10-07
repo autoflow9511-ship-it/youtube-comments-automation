@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../../database/prisma.service';
 import { YouTubeApiService } from './youtube-api.service';
-import { ChannelStatus } from '@prisma/client';
+import { ChannelStatus } from '@database/prisma-compat';
 
 export interface VideoSyncResult {
   success: boolean;
