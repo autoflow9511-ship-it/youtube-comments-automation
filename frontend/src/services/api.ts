@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-production.up.railway.app/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
