@@ -52,8 +52,17 @@ export function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || '/api/v1'}/auth/google`;
+  const handleGoogleLogin = async () => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
+      const response = await fetch(`${apiBase}/auth/google/url`);
+      if (!response.ok) throw new Error('Could not start Google sign-in');
+      const data = await response.json();
+      if (!data.url) throw new Error('Google sign-in URL was not returned');
+      window.location.assign(data.url);
+    } catch {
+      toast.error('Could not connect to Google. Please try again later.');
+    }
   };
 
   return (
