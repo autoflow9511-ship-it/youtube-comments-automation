@@ -293,12 +293,17 @@ export class AuthService {
   // GOOGLE OAUTH & YOUTUBE CHANNEL CONNECTION
   // ============================================
 
+  private getGoogleRedirectUri() {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://youtube-comments-automation.vercel.app';
+    return `${frontendUrl.replace(/\\/$/, '')}/auth/callback`;
+  }
+
   async googleAuth(dto: GoogleAuthDto) {
-    // Exchange authorization code for tokens
+    // Exchange authorization code using the same redirect URI as the authorization request.
     const oauth2Client = new google.auth.OAuth2(
       this.configService.get<string>('GOOGLE_CLIENT_ID'),
       this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
-      this.configService.get<string>('GOOGLE_CALLBACK_URL'),
+      this.getGoogleRedirectUri(),
     );
 
     const { tokens } = await oauth2Client.getToken(dto.code);
