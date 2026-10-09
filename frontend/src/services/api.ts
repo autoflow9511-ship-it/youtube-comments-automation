@@ -100,7 +100,7 @@ export const authApi = {
     api.post('/auth/login', data),
   googleAuth: (data: { accessToken: string; refreshToken: string; providerId: string; email: string; firstName?: string; lastName?: string; avatar?: string }) =>
     api.post('/auth/google', data),
-  googleOAuthUrl: () => api.get('/auth/google'),
+  googleOAuthUrl: () => api.get('/auth/google/url'),
   refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
   logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/profile'),
