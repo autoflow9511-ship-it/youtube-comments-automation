@@ -17,7 +17,7 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 import { Roles } from '@decorators/roles.decorator';
 import { CurrentUser } from '@decorators/current-user.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@database/prisma-compat';
 
 @ApiTags('Users')
 @Controller('users')
