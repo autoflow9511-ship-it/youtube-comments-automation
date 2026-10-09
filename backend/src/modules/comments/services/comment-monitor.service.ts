@@ -369,7 +369,7 @@ export class CommentMonitorService {
       automationId,
       triggerData: triggerData as any,
       channelId: automation.channelId,
-      userId,
+      userId: automation.channel.userId,
     });
 
     return execution;
