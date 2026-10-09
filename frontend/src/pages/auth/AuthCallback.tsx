@@ -29,7 +29,8 @@ export function AuthCallback() {
 
       try {
         // Exchange code for tokens via backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL || '/api/v1'}/auth/google/callback`, {
+        const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
+        const response = await fetch(`${apiBase}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
