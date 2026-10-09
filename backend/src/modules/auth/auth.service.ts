@@ -375,7 +375,7 @@ export class AuthService {
     const oauth2Client = new google.auth.OAuth2(
       this.configService.get<string>('GOOGLE_CLIENT_ID'),
       this.configService.get<string>('GOOGLE_CLIENT_SECRET'),
-      this.configService.get<string>('GOOGLE_CALLBACK_URL'),
+      this.getGoogleRedirectUri(),
     );
 
     const scopes = [
