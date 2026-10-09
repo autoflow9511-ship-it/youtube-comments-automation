@@ -187,6 +187,7 @@ export class AuthController {
     return res.redirect(`${frontendUrl}/auth/callback`);
   }
 
+  @Public()
   @Post('google')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
