@@ -58,10 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const googleLogin = async (data: any) => {
-    const response = await authApi.googleAuth(data);
-    localStorage.setItem('accessToken', response.data.accessToken);
-    localStorage.setItem('refreshToken', response.data.refreshToken);
-    setUser(response.data.user);
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    setUser(data.user);
   };
 
   const logout = async () => {
