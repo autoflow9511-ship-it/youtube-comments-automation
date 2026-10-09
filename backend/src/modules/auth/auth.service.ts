@@ -295,7 +295,7 @@ export class AuthService {
 
   private getGoogleRedirectUri() {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://youtube-comments-automation.vercel.app';
-    return `${frontendUrl.replace(/\\/$/, '')}/auth/callback`;
+    return `${frontendUrl.replace(/\/$/, '')}/auth/callback`;
   }
 
   async googleAuth(dto: GoogleAuthDto) {
