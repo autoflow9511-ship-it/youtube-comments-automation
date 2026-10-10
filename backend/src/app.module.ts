@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthController } from './health.controller';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@config/config.module';
@@ -24,6 +25,7 @@ import { AuthGuard } from '@guards/auth.guard';
 import { RolesGuard } from '@guards/roles.guard';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule, PrismaModule, CommonModule,
     ScheduleModule.forRoot(), QueueModule,
