@@ -9,7 +9,7 @@ import helmet from 'helmet';
 // function into /var/task and may not include tsconfig.json, so tsconfig-paths'
 // automatic config discovery is not reliable in this serverless environment.
 const backendRoot = path.resolve(__dirname, '..');
-const Module = require('module') as typeof import('module');
+const Module: any = require('module');
 const originalResolveFilename = Module._resolveFilename;
 const aliasPrefixes: Record<string, string> = {
   '@modules/': path.join(backendRoot, 'src/modules/'),
@@ -25,7 +25,7 @@ const aliasPrefixes: Record<string, string> = {
   '@youtube/': path.join(backendRoot, 'src/modules/youtube/'),
   '@/': path.join(backendRoot, 'src/'),
 };
-Module._resolveFilename = function(request: string, parent: NodeModule | null | undefined, isMain: boolean, options?: unknown) {
+Module._resolveFilename = function(request: string, parent: any, isMain: boolean, options?: any) {
   for (const [prefix, target] of Object.entries(aliasPrefixes)) {
     if (request.startsWith(prefix)) {
       request = path.join(target, request.slice(prefix.length));
