@@ -53,6 +53,8 @@ export function Login() {
   };
 
   const handleGoogleLogin = async () => {
+    if (isGoogleLoading) return;
+    setIsGoogleLoading(true);
     try {
       const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
       const response = await fetch(`${apiBase}/auth/google/url`);
@@ -60,8 +62,11 @@ export function Login() {
       const data = await response.json();
       if (!data.url) throw new Error('Google sign-in URL was not returned');
       window.location.assign(data.url);
-    } catch {
-      toast.error('Could not connect to Google. Please try again later.');
+    } catch (error) {
+      console.error('Google sign-in initialization failed:', error);
+      toast.error('Google sign-in could not start. Check the backend connection and try again.');
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -77,10 +82,12 @@ export function Login() {
       <button
         type="button"
         onClick={handleGoogleLogin}
-        className="btn-secondary w-full gap-2.5 py-2.5 justify-center"
+        disabled={isGoogleLoading}
+        aria-busy={isGoogleLoading}
+        className="btn-secondary w-full gap-2.5 py-2.5 justify-center disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <GoogleIcon />
-        <span>Continue with Google</span>
+        <span>{isGoogleLoading ? 'Connecting to Google…' : 'Continue with Google'}</span>
       </button>
 
       {/* Divider */}
