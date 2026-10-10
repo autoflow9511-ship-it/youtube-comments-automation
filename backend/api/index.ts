@@ -5,28 +5,35 @@ import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import helmet from 'helmet';
 
-// Vercel runs this function from a different working directory than the backend
-// package, so register the repository's TypeScript aliases explicitly.
-require('tsconfig-paths').register({
-  baseUrl: path.resolve(__dirname, '..'),
-  paths: {
-    '@/*': ['src/*'],
-    '@modules/*': ['src/modules/*'],
-    '@common/*': ['src/common/*'],
-    '@config/*': ['src/config/*'],
-    '@database/*': ['src/database/*'],
-    '@guards/*': ['src/guards/*'],
-    '@decorators/*': ['src/decorators/*'],
-    '@interfaces/*': ['src/interfaces/*'],
-    '@utils/*': ['src/utils/*'],
-    '@queue/*': ['src/queue/*'],
-    '@scheduler/*': ['src/scheduler/*'],
-    '@youtube/*': ['src/modules/youtube/*'],
-    '@modules/emails/*': ['src/modules/emails/*'],
-    '@modules/landing-pages/*': ['src/modules/landing-pages/*'],
-    '@modules/public-forms/*': ['src/modules/public-forms/*']
+// Resolve the backend's TypeScript path aliases at runtime. Vercel bundles the
+// function into /var/task and may not include tsconfig.json, so tsconfig-paths'
+// automatic config discovery is not reliable in this serverless environment.
+const backendRoot = path.resolve(__dirname, '..');
+const Module = require('module') as typeof import('module');
+const originalResolveFilename = Module._resolveFilename;
+const aliasPrefixes: Record<string, string> = {
+  '@modules/': path.join(backendRoot, 'src/modules/'),
+  '@common/': path.join(backendRoot, 'src/common/'),
+  '@config/': path.join(backendRoot, 'src/config/'),
+  '@database/': path.join(backendRoot, 'src/database/'),
+  '@guards/': path.join(backendRoot, 'src/guards/'),
+  '@decorators/': path.join(backendRoot, 'src/decorators/'),
+  '@interfaces/': path.join(backendRoot, 'src/interfaces/'),
+  '@utils/': path.join(backendRoot, 'src/utils/'),
+  '@queue/': path.join(backendRoot, 'src/queue/'),
+  '@scheduler/': path.join(backendRoot, 'src/scheduler/'),
+  '@youtube/': path.join(backendRoot, 'src/modules/youtube/'),
+  '@/': path.join(backendRoot, 'src/'),
+};
+Module._resolveFilename = function(request: string, parent: NodeModule | null | undefined, isMain: boolean, options?: unknown) {
+  for (const [prefix, target] of Object.entries(aliasPrefixes)) {
+    if (request.startsWith(prefix)) {
+      request = path.join(target, request.slice(prefix.length));
+      break;
+    }
   }
-});
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
 
 // Require the app only after the aliases are registered.
 const { AppModule } = require('../src/app.module') as typeof import('../src/app.module');
