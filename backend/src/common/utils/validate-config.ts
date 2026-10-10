@@ -11,6 +11,23 @@ export function validateConfig<T>(
     return defaultValue;
   }
 
+  // When an enum object is supplied (for example Environment), validate the
+  // string against its values directly. plainToInstance() is intended for
+  // class DTOs and incorrectly treats enum strings like class instances.
+  if (enumType && typeof enumType === 'object') {
+    const allowedValues = Object.values(enumType).filter(
+      (entry): entry is string => typeof entry === 'string',
+    );
+    if (allowedValues.length > 0) {
+      if (allowedValues.includes(value)) {
+        return value as T;
+      }
+      throw new Error(
+        `Invalid value for ${envKey}: expected one of ${allowedValues.join(', ')}`,
+      );
+    }
+  }
+
   const validated = plainToInstance(enumType, value);
   const errors = validateSync(validated as object, { whitelist: true, forbidNonWhitelisted: true });
 
