@@ -33,6 +33,7 @@ export function Login() {
   const navigate  = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading]     = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
