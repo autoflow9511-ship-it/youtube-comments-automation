@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@contexts/AuthContext';
+import { authApi } from '@services/api';
 import toast from 'react-hot-toast';
 import {
   EnvelopeIcon,
@@ -47,7 +48,8 @@ export function Login() {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Invalid credentials');
+      const message = error.response?.data?.message;
+      toast.error(Array.isArray(message) ? message.join(', ') : (typeof message === 'string' ? message : 'Sign-in failed. Check your credentials and connection.'));
     } finally {
       setIsLoading(false);
     }
@@ -57,10 +59,8 @@ export function Login() {
     if (isGoogleLoading) return;
     setIsGoogleLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
-      const response = await fetch(`${apiBase}/auth/google/url`);
-      if (!response.ok) throw new Error('Could not start Google sign-in');
-      const data = await response.json();
+      const response = await authApi.googleOAuthUrl();
+      const data = response.data;
       if (!data.url) throw new Error('Google sign-in URL was not returned');
       window.location.assign(data.url);
     } catch (error) {
@@ -76,7 +76,7 @@ export function Login() {
       {/* Heading */}
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-white">Welcome back</h2>
-        <p className="text-sm text-slate-500 mt-1">Sign in to your account</p>
+        <p className="text-sm text-slate-200 mt-1">Sign in to your account</p>
       </div>
 
       {/* Google OAuth */}
@@ -92,7 +92,7 @@ export function Login() {
       </button>
 
       {/* Divider */}
-      <div className="divider-text text-[11px] text-slate-600">
+      <div className="divider-text text-[11px] text-slate-200">
         or sign in with email
       </div>
 
@@ -147,7 +147,7 @@ export function Login() {
             <button
               type="button"
               onClick={() => setShowPassword(s => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-100 hover:text-white transition-colors rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-300"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword
@@ -165,7 +165,7 @@ export function Login() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isGoogleLoading}
           className="btn-primary w-full py-2.5 mt-2 group"
         >
           {isLoading ? (
@@ -186,7 +186,7 @@ export function Login() {
       </form>
 
       {/* Register link */}
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-200">
         Don&apos;t have an account?{' '}
         <Link to="/register" className="text-primary-400 hover:text-primary-300 font-medium transition-colors">
           Create account
