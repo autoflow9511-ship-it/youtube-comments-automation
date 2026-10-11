@@ -55,6 +55,7 @@ async function createApp() {
     exclude: [
       { path: '/', method: RequestMethod.GET },
       { path: 'health', method: RequestMethod.GET },
+      { path: 'ready', method: RequestMethod.GET },
     ],
   });
   app.useGlobalPipes(new ValidationPipe({
