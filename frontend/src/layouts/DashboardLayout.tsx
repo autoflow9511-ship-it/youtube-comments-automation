@@ -30,7 +30,7 @@ export function DashboardLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface-900 text-slate-100">
+    <div className="app-scenic-background min-h-screen text-slate-100">
       {/* Sidebar */}
       <Sidebar
         mobileOpen={mobileOpen}
