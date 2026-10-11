@@ -73,7 +73,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy(){ if(this.client) await this.client.close(); }
   async ping(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
-    await this.db.command({ ping: 1 }, { maxTimeMS: 3000 });
+    await this.db.command({ ping: 1, maxTimeMS: 3000 });
   }
   getModel(name:string){ return this.models[name] || (this.models[name]=new MongoModel(this,name)); }
   [key:string]: any;
