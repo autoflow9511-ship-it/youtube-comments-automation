@@ -46,7 +46,7 @@ export function HomePage() {
   }, []);
   return <div className="relative isolate min-h-screen bg-transparent text-slate-100">
     <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true"><LensZoomCarousel slides={backgroundSlides} activeIndex={backgroundIndex} backgroundMode height="100%" duration={900} autoplay={0} ariaLabel="Decorative scrolling background" /></div>
-    <div className="pointer-events-none absolute inset-x-0 top-0 h-[700px] overflow-hidden" aria-hidden="true"><div className="absolute -top-44 left-[5%] h-[480px] w-[480px] rounded-full bg-violet-700/20 blur-[120px]"/><div className="absolute right-[5%] top-24 h-[380px] w-[380px] rounded-full bg-cyan-600/10 blur-[120px]"/></div>
+    
     <header className="sticky top-0 z-50 mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0d0d14]/85 px-5 py-4 backdrop-blur-md sm:px-8">
       <Link to="/" className="flex items-center gap-3 font-bold tracking-tight text-white"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500"><PlayCircleIcon className="h-6 w-6"/></span><span>YouTube Automation</span></Link>
       <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm text-slate-300 md:flex"><a className="hover:text-white" href="#features">Features</a><a className="hover:text-white" href="#how-it-works">How it works</a><a className="hover:text-white" href="#pricing">Pricing</a></nav>
