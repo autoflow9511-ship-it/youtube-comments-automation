@@ -8,26 +8,7 @@ export function AuthLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface-900 flex flex-col">
-
-      {/* Animated background mesh */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        {/* Primary glow */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-800/10 blur-[120px] animate-pulse-slow" />
-        {/* Accent glow */}
-        <div className="absolute -bottom-40 -right-20 w-80 h-80 rounded-full bg-blue-900/10 blur-[100px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        {/* Center subtle glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-blue-950/10 blur-[160px]" />
-
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-          }}
-        />
-      </div>
+    <div className="app-scenic-background min-h-screen flex flex-col">
 
       {/* Content */}
       <div className="relative flex-1 flex flex-col items-center justify-center p-4 py-12">
