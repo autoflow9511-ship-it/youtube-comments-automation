@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -6,10 +6,13 @@ import { LoadingScreen } from '@components/ui/LoadingScreen';
 
 export function AuthCallback() {
   const navigate = useNavigate();
+  const processing = useRef(false);
   const [searchParams] = useSearchParams();
   const { googleLogin } = useAuth();
 
   useEffect(() => {
+    if (processing.current) return;
+    processing.current = true;
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
@@ -29,7 +32,7 @@ export function AuthCallback() {
 
       try {
         // Exchange code for tokens via backend
-        const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
+        const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api.vercel.app/api/v1';
         const response = await fetch(`${apiBase}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
