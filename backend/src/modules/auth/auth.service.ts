@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -212,6 +212,9 @@ export class AuthService {
   // ============================================
 
   async forgotPassword(dto: ForgotPasswordDto) {
+    // A reset token must never be generated unless a delivery provider is configured.
+    // The previous implementation returned a false success without sending an email.
+    throw new ServiceUnavailableException('Password reset email delivery is not configured');
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
