@@ -30,10 +30,10 @@ const CSS=`
 .lz-root:focus-visible{outline:2px solid var(--lz-ink);outline-offset:-2px}
 .lz-base,.lz-in{position:absolute;inset:0}
 .lz-base{transition:filter .9s ease,transform 1.4s cubic-bezier(.2,.7,.2,1)}
-.lz-root[data-moving="1"] .lz-base{filter:brightness(.42);transform:scale(1.04)}
+.lz-root[data-moving="1"] .lz-base{filter:none;transform:none}
 .lz-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .lz-in{overflow:hidden;animation:lz-show var(--lz-d) ease both}
-.lz-main{animation:lz-zoom var(--lz-d) cubic-bezier(.16,.8,.2,1) both}
+.lz-main{animation:lz-zoom var(--lz-d) cubic-bezier(.16,.8,.2,1) both}\n.lz-background .lz-main{animation:lz-show var(--lz-d) ease both}\n.lz-background .lz-ghost{display:none}
 .lz-ghost{mix-blend-mode:screen;animation:lz-ghost var(--lz-d) cubic-bezier(.16,.8,.2,1) both}
 .lz-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78),transparent 65%);pointer-events:none}
 .lz-text{position:absolute;left:clamp(20px,4vw,56px);bottom:85px;right:clamp(20px,25vw,300px);pointer-events:none}
@@ -47,7 +47,7 @@ const CSS=`
 .lz-fill{height:100%;background:var(--lz-ink);transform-origin:left;transform:scaleX(0)}
 .lz-fill[data-run="1"]{animation:lz-fill var(--lz-auto) linear forwards}
 .lz-root[data-paused="1"] .lz-fill{animation-play-state:paused}
-.lz-background .lz-text,.lz-background .lz-nav,.lz-background .lz-track{display:none}\n.lz-background .lz-shade{background:none}\n.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lz-background .lz-text,.lz-background .lz-nav,.lz-background .lz-track{display:none}\n.lz-background .lz-shade{display:none}\n.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @keyframes lz-show{from{opacity:0}35%{opacity:1}to{opacity:1}}
 @keyframes lz-zoom{from{transform:scale(var(--lz-depth));filter:blur(14px) brightness(1.2)}to{transform:scale(1);filter:none}}
 @keyframes lz-ghost{from{transform:scale(var(--lz-g));opacity:.4;filter:blur(6px)}to{transform:scale(1);opacity:0;filter:none}}
