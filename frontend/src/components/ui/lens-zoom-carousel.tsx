@@ -3,7 +3,7 @@ import * as React from "react"
 
 export type LandPalette = "dawn" | "alpine" | "dusk" | "mist"
 export type Slide = { image?: string; title?: string; caption?: string; alt?: string; palette?: LandPalette; seed?: number }
-export type LensZoomCarouselProps = { slides?: Slide[]; height?: number | string; duration?: number; depth?: number; autoplay?: number; ink?: string; onChange?: (index: number) => void; className?: string; style?: React.CSSProperties; ariaLabel?: string }
+export type LensZoomCarouselProps = { slides?: Slide[]; height?: number | string; duration?: number; depth?: number; autoplay?: number; ink?: string; onChange?: (index: number) => void; className?: string; style?: React.CSSProperties; ariaLabel?: string; activeIndex?: number; backgroundMode?: boolean }
 export const wrap = (i: number, n: number) => n ? ((i % n) + n) % n : 0
 export const ghostScale = (depth: number, g: number) => depth + (depth - 1) * 0.6 * (g + 1)
 export const pad2 = (n: number) => n < 10 ? "0" + n : String(n)
@@ -47,7 +47,7 @@ const CSS=`
 .lz-fill{height:100%;background:var(--lz-ink);transform-origin:left;transform:scaleX(0)}
 .lz-fill[data-run="1"]{animation:lz-fill var(--lz-auto) linear forwards}
 .lz-root[data-paused="1"] .lz-fill{animation-play-state:paused}
-.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lz-background .lz-text,.lz-background .lz-nav,.lz-background .lz-track{display:none}\n.lz-background .lz-shade{background:linear-gradient(90deg,rgba(7,7,18,.90),rgba(7,7,18,.76)),linear-gradient(to top,rgba(7,7,18,.90),transparent)}\n.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @keyframes lz-show{from{opacity:0}35%{opacity:1}to{opacity:1}}
 @keyframes lz-zoom{from{transform:scale(var(--lz-depth));filter:blur(14px) brightness(1.2)}to{transform:scale(1);filter:none}}
 @keyframes lz-ghost{from{transform:scale(var(--lz-g));opacity:.4;filter:blur(6px)}to{transform:scale(1);opacity:0;filter:none}}
@@ -55,7 +55,7 @@ const CSS=`
 @media(prefers-reduced-motion:reduce){.lz-in,.lz-main,.lz-ghost,.lz-fill{animation:none!important}.lz-ghost{display:none}.lz-base{transition:none}}
 @media(max-width:520px){.lz-text{bottom:145px;right:20px}.lz-nav{left:20px;right:auto;bottom:66px}}
 `
-export default function LensZoomCarousel({slides=DEFAULT_SLIDES,height="100svh",duration=1050,depth=1.35,autoplay=6000,ink="#ffffff",onChange,className,style,ariaLabel="Image carousel"}:LensZoomCarouselProps) {
+export default function LensZoomCarousel({slides=DEFAULT_SLIDES,height="100svh",duration=1050,depth=1.35,autoplay=6000,ink="#ffffff",onChange,className,style,ariaLabel="Image carousel",activeIndex,backgroundMode=false}:LensZoomCarouselProps) {
   const n=slides.length;const srcs=useSlideImages(slides)
   const [index,setIndex]=React.useState(0)
   const [incoming,setIncoming]=React.useState<null|{to:number;dir:number;id:number}>(null)
@@ -64,12 +64,13 @@ export default function LensZoomCarousel({slides=DEFAULT_SLIDES,height="100svh",
   const down=React.useRef<null|{x:number;y:number}>(null)
   const go=React.useCallback((dir:number)=>{if(n<2)return;setIncoming(prev=>prev?prev:{to:wrap(index+dir,n),dir,id:Date.now()})},[n,index])
   React.useEffect(()=>{onChange?.(index)},[index,onChange])
+  React.useEffect(()=>{if(activeIndex===undefined||n<1)return;const target=wrap(activeIndex,n);if(target===index){setIncoming(null);return}setIncoming({to:target,dir:target>index?1:-1,id:Date.now()})},[activeIndex,index,n])
   React.useEffect(()=>{const root=rootRef.current;if(!root||typeof IntersectionObserver==="undefined")return;let seen=true;const sync=()=>setPaused(!seen||document.hidden);const io=new IntersectionObserver(([entry])=>{seen=entry.isIntersecting;sync()});io.observe(root);document.addEventListener("visibilitychange",sync);return()=>{io.disconnect();document.removeEventListener("visibilitychange",sync)}},[])
   React.useEffect(()=>{if(!incoming)return;const t=window.setTimeout(()=>{setIndex(incoming.to);setIncoming(null)},Math.max(100,duration)+80);return()=>window.clearTimeout(t)},[incoming,duration])
-  React.useEffect(()=>{if(!autoplay||paused||incoming||n<2)return;const t=window.setTimeout(()=>go(1),autoplay);return()=>window.clearTimeout(t)},[autoplay,paused,incoming,n,index,go])
+  React.useEffect(()=>{if(activeIndex!==undefined||!autoplay||paused||incoming||n<2)return;const t=window.setTimeout(()=>go(1),autoplay);return()=>window.clearTimeout(t)},[autoplay,paused,incoming,n,index,go,activeIndex])
   React.useEffect(()=>{if(index>=n&&n>0)setIndex(0)},[index,n])
   const shown=incoming?incoming.to:index;const slide=slides[shown]||{}
-  return <div ref={rootRef} className={["lz-root",className].filter(Boolean).join(" ")} style={{height,["--lz-ink" as string]:ink,["--lz-d" as string]:duration+"ms",["--lz-auto" as string]:autoplay+"ms",...style}} data-moving={incoming?"1":"0"} data-paused={paused?"1":"0"} role="region" aria-roledescription="carousel" aria-label={ariaLabel} tabIndex={0} onKeyDown={e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();go(e.key==="ArrowRight"?1:-1)}}} onPointerDown={e=>{down.current={x:e.clientX,y:e.clientY}}} onPointerUp={e=>{const p=down.current;down.current=null;if(p&&Math.abs(e.clientX-p.x)>40&&Math.abs(e.clientX-p.x)>Math.abs(e.clientY-p.y))go(e.clientX<p.x?1:-1)}}>
+  return <div ref={rootRef} className={["lz-root",backgroundMode?"lz-background":null,className].filter(Boolean).join(" ")} style={{height,["--lz-ink" as string]:ink,["--lz-d" as string]:duration+"ms",["--lz-auto" as string]:autoplay+"ms",...style}} data-moving={incoming?"1":"0"} data-paused={paused?"1":"0"} role="region" aria-roledescription="carousel" aria-label={ariaLabel} tabIndex={0} onKeyDown={e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();go(e.key==="ArrowRight"?1:-1)}}} onPointerDown={e=>{down.current={x:e.clientX,y:e.clientY}}} onPointerUp={e=>{const p=down.current;down.current=null;if(p&&Math.abs(e.clientX-p.x)>40&&Math.abs(e.clientX-p.x)>Math.abs(e.clientY-p.y))go(e.clientX<p.x?1:-1)}}>
     <style>{CSS}</style><div className="lz-base">{srcs[index]&&<img className="lz-img" src={srcs[index]} alt={slides[index]?.alt||slides[index]?.title||""} draggable={false}/>}</div>
     {incoming&&<div className="lz-in" key={incoming.id} style={{["--lz-depth" as string]:String(incoming.dir>=0?depth:1/depth)}} aria-hidden="true">{srcs[incoming.to]&&<><img className="lz-img lz-main" src={srcs[incoming.to]} alt="" draggable={false}/>{[1,0].map(g=><img key={g} className="lz-img lz-ghost" src={srcs[incoming.to]} alt="" draggable={false} style={{["--lz-g" as string]:String(ghostScale(incoming.dir>=0?depth:1/depth,g)),animationDelay:g*40+"ms"}}/>)}</>}</div>}
     <div className="lz-shade" aria-hidden="true"/><div className="lz-text" key={shown}><h2 className="lz-title">{slide.title}</h2><p className="lz-cap">{slide.caption}</p></div>
