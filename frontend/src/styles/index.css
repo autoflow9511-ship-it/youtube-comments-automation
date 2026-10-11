@@ -376,7 +376,7 @@
     inset: -1px;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(124,77,255,0.4), rgba(6,182,212,0.2));
+    background: linear-gradient(135deg, rgba(29,78,216,0.4), rgba(6,182,212,0.2));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -425,10 +425,21 @@
 
   /* Animated gradient text */
   .animate-gradient-text {
-    background: linear-gradient(90deg, #7c4dff, #22d3ee, #7c4dff);
+    background: linear-gradient(90deg, #1d4ed8, #22d3ee, #1d4ed8);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shimmer 3s linear infinite;
   }
+}
+
+/* Shared dark-blue + white theme across public, auth, dashboard and admin pages. */
+@layer components {
+  .card, .card-glass { @apply bg-blue-950/95 border-blue-300/25 text-white; }
+  .card-hover:hover { @apply border-blue-400/60; }
+  .btn-primary, .btn-accent { @apply bg-blue-800 text-white hover:bg-blue-700; }
+  .btn-secondary { @apply bg-blue-950 text-white border-blue-200/50 hover:bg-blue-900; }
+  .input { @apply bg-blue-950/90 border-blue-200/30 text-white focus:border-blue-400; }
+  .modal { @apply bg-blue-950 border-blue-300/30; }
+  .badge-primary, .badge-accent { @apply bg-blue-900 text-white border-blue-400/40; }
 }
