@@ -26,7 +26,7 @@ export function AuthLayout() {
           </div>
           <div className="text-center">
             <h1 className="text-xl font-bold text-white leading-none">YouTube Automation</h1>
-            <p className="text-sm text-slate-300 mt-1">Automate comments &amp; grow your channel</p>
+            <p className="text-sm text-white mt-1">Automate comments &amp; grow your channel</p>
           </div>
         </Link>
 
@@ -39,13 +39,13 @@ export function AuthLayout() {
           {/* Feature pills */}
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             {['Comment automation', 'Email capture', 'Landing pages', 'Analytics'].map(feat => (
-              <span key={feat} className="badge-gray text-[11px]">{feat}</span>
+              <span key={feat} className="rounded-full border border-blue-200/60 bg-blue-950 px-3 py-1 text-xs font-medium text-white">{feat}</span>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-[11px] text-slate-600 text-center">
+        <p className="mt-8 text-xs text-white text-center rounded-lg bg-blue-950/90 px-3 py-2">
           &copy; {new Date().getFullYear()} YouTube Automation. All rights reserved.
         </p>
       </div>
