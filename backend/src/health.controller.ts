@@ -1,13 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { Public } from '@modules/auth/decorators/public.decorator';
+import { PrismaService } from '@database/prisma.service';
 
-/**
- * Basic process health endpoint.
- * MongoDB is connected during application startup by PrismaService, so a successful
- * response also confirms Nest completed module initialization.
- */
+/** Liveness checks the HTTP process; readiness additionally verifies live MongoDB access. */
 @Controller()
 export class HealthController {
+  constructor(private readonly database: PrismaService) {}
+
   @Public()
   @Get()
   getRoot() {
@@ -26,5 +25,25 @@ export class HealthController {
       service: 'youtube-automation-api',
       timestamp: new Date().toISOString(),
     };
+  }
+
+  @Public()
+  @Get('ready')
+  async getReadiness() {
+    try {
+      await this.database.ping();
+      return {
+        status: 'ready',
+        service: 'youtube-automation-api',
+        checks: { database: 'ok' },
+        timestamp: new Date().toISOString(),
+      };
+    } catch {
+      throw new ServiceUnavailableException({
+        status: 'not_ready',
+        service: 'youtube-automation-api',
+        checks: { database: 'unavailable' },
+      });
+    }
   }
 }
