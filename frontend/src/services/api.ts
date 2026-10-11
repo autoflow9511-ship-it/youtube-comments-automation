@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api-autoflow9511-ship-it.vercel.app/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api.vercel.app/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -44,7 +44,7 @@ api.interceptors.response.use(
   async (error: AxiosError<ApiError>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !/\/auth\/(login|register|refresh|forgot-password|google(?:\/url)?)$/.test(originalRequest.url || '')) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -82,7 +82,7 @@ api.interceptors.response.use(
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') window.location.assign('/login');
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
