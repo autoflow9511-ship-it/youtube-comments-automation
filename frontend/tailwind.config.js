@@ -5,19 +5,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary — electric violet (AI-Native)
+        // Primary — dark blue and white
         primary: {
-          50:  '#f3f0ff',
-          100: '#e9e3ff',
-          200: '#d5cbff',
-          300: '#b9a6ff',
-          400: '#9775ff',
-          500: '#7c4dff',
-          600: '#6c35f5',
-          700: '#5b23e1',
-          800: '#4b1dbc',
-          900: '#3e1a99',
-          950: '#250d6b',
+          50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+          400: '#60a5fa', 500: '#3b82f6', 600: '#1d4ed8', 700: '#1e40af',
+          800: '#1e3a8a', 900: '#172554', 950: '#0b1635',
         },
         // Accent — neon cyan
         accent: {
@@ -61,13 +53,13 @@ export default {
         surface: {
           50:  '#f8fafc',
           100: '#f1f5f9',
-          900: '#0d0d14',
-          800: '#12121e',
-          750: '#161624',
-          700: '#1c1c2e',
-          650: '#21213a',
-          600: '#272748',
-          500: '#2e2e56',
+          900: '#081427',
+          800: '#0c1933',
+          750: '#112747',
+          700: '#173256',
+          650: '#1d3a60',
+          600: '#24456c',
+          500: '#2b517b',
         },
         youtube: {
           red:  '#FF0000',
@@ -91,9 +83,9 @@ export default {
       },
 
       boxShadow: {
-        'glow-sm':  '0 0 12px 0 rgb(124 77 255 / 0.25)',
-        'glow':     '0 0 24px 0 rgb(124 77 255 / 0.35)',
-        'glow-lg':  '0 0 40px 0 rgb(124 77 255 / 0.45)',
+        'glow-sm':  '0 0 12px 0 rgb(29 78 216 / 0.25)',
+        'glow':     '0 0 24px 0 rgb(29 78 216 / 0.35)',
+        'glow-lg':  '0 0 40px 0 rgb(29 78 216 / 0.45)',
         'glow-cyan':'0 0 24px 0 rgb(6 182 212 / 0.35)',
         'glass':    '0 8px 32px 0 rgb(0 0 0 / 0.36)',
         'card':     '0 4px 24px 0 rgb(0 0 0 / 0.25)',
@@ -102,12 +94,12 @@ export default {
 
       backgroundImage: {
         // Mesh gradients
-        'mesh-purple': 'radial-gradient(at 40% 20%, hsla(263,80%,50%,0.18) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(189,100%,56%,0.12) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(355,100%,50%,0.08) 0px, transparent 50%)',
-        'mesh-dark':   'radial-gradient(at 20% 80%, hsla(263,80%,40%,0.15) 0px, transparent 50%), radial-gradient(at 80% 20%, hsla(189,100%,40%,0.10) 0px, transparent 50%)',
+        'mesh-purple': 'radial-gradient(at 40% 20%, hsla(220,85%,45%,0.18) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(189,100%,56%,0.12) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(355,100%,50%,0.08) 0px, transparent 50%)',
+        'mesh-dark':   'radial-gradient(at 20% 80%, hsla(220,85%,40%,0.15) 0px, transparent 50%), radial-gradient(at 80% 20%, hsla(189,100%,40%,0.10) 0px, transparent 50%)',
         // Gradients
-        'gradient-primary': 'linear-gradient(135deg, #7c4dff 0%, #22d3ee 100%)',
-        'gradient-dark':    'linear-gradient(180deg, #12121e 0%, #0d0d14 100%)',
-        'gradient-card':    'linear-gradient(135deg, rgba(124,77,255,0.08) 0%, rgba(6,182,212,0.04) 100%)',
+        'gradient-primary': 'linear-gradient(135deg, #1d4ed8 0%, #22d3ee 100%)',
+        'gradient-dark':    'linear-gradient(180deg, #0c1933 0%, #081427 100%)',
+        'gradient-card':    'linear-gradient(135deg, rgba(29,78,216,0.08) 0%, rgba(6,182,212,0.04) 100%)',
         // Glass
         'glass-light': 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
         'glass-dark':  'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
@@ -158,8 +150,8 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         glowPulse: {
-          '0%, 100%': { boxShadow: '0 0 12px 0 rgb(124 77 255 / 0.3)' },
-          '50%':      { boxShadow: '0 0 32px 0 rgb(124 77 255 / 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 12px 0 rgb(29 78 216 / 0.3)' },
+          '50%':      { boxShadow: '0 0 32px 0 rgb(29 78 216 / 0.6)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
