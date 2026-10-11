@@ -47,7 +47,7 @@ const CSS=`
 .lz-fill{height:100%;background:var(--lz-ink);transform-origin:left;transform:scaleX(0)}
 .lz-fill[data-run="1"]{animation:lz-fill var(--lz-auto) linear forwards}
 .lz-root[data-paused="1"] .lz-fill{animation-play-state:paused}
-.lz-background .lz-text,.lz-background .lz-nav,.lz-background .lz-track{display:none}\n.lz-background .lz-shade{background:linear-gradient(90deg,rgba(7,7,18,.80),rgba(7,7,18,.66)),linear-gradient(to top,rgba(7,7,18,.82),transparent)}\n.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lz-background .lz-text,.lz-background .lz-nav,.lz-background .lz-track{display:none}\n.lz-background .lz-shade{background:none}\n.lz-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @keyframes lz-show{from{opacity:0}35%{opacity:1}to{opacity:1}}
 @keyframes lz-zoom{from{transform:scale(var(--lz-depth));filter:blur(14px) brightness(1.2)}to{transform:scale(1);filter:none}}
 @keyframes lz-ghost{from{transform:scale(var(--lz-g));opacity:.4;filter:blur(6px)}to{transform:scale(1);opacity:0;filter:none}}
