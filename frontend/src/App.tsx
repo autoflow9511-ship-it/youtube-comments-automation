@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { HomePage } from '@pages/HomePage';
+import { InformationPage } from '@pages/InformationPage';
 import { useAuth } from '@contexts/AuthContext';
 import { DashboardLayout } from '@layouts/DashboardLayout';
 import { AuthLayout } from '@layouts/AuthLayout';
@@ -60,7 +62,11 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <Routes>
-<Route path="/lp/:slug" element={<LandingPagePublic />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/terms" element={<InformationPage kind="terms" />} />
+      <Route path="/privacy" element={<InformationPage kind="privacy" />} />
+      <Route path="/contact" element={<InformationPage kind="contact" />} />
+      <Route path="/lp/:slug" element={<LandingPagePublic />} />
       
        
        <Route element={<AuthLayout />}>
@@ -89,8 +95,7 @@ function App() {
         <Route path="/admin/*" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
