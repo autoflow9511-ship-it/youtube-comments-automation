@@ -5,6 +5,7 @@ import { useAuth } from '@contexts/AuthContext';
 import { DashboardLayout } from '@layouts/DashboardLayout';
 import { AuthLayout } from '@layouts/AuthLayout';
 import { Login } from '@pages/auth/Login';
+import { ForgotPassword } from '@pages/auth/ForgotPassword';
 import { Register } from '@pages/auth/Register';
 import { AuthCallback } from '@pages/auth/AuthCallback';
 import { Dashboard } from '@pages/dashboard/Dashboard';
@@ -71,6 +72,7 @@ function App() {
        
        <Route element={<AuthLayout />}>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
       </Route>
