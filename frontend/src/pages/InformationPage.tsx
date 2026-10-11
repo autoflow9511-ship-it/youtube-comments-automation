@@ -1,0 +1,8 @@
+import { Link } from 'react-router-dom';
+type PageKind = 'terms' | 'privacy' | 'contact';
+const content: Record<PageKind, {title:string; paragraphs:string[]}> = {
+ terms: {title:'Terms of Service',paragraphs:['These terms are being prepared. This page is informational and is not a finalized contractual agreement.','Do not rely on an automation as successfully completed unless the dashboard or provider confirms its result. You are responsible for complying with YouTube platform policies and applicable laws.','Formal terms should be reviewed and published before offering paid subscriptions.']},
+ privacy: {title:'Privacy Policy',paragraphs:['Our detailed privacy policy is being prepared. This notice is not a complete privacy disclosure.','The product is designed to process account details, authorized YouTube information and email addresses voluntarily submitted through public forms.','Before public launch, publish verified information about data retention, processors, user rights, and how to request deletion.']},
+ contact: {title:'Contact Us',paragraphs:['Support contact details have not yet been configured.','Please use the support channel provided by the website operator once it is published.']},
+};
+export function InformationPage({kind}:{kind:PageKind}) {const page=content[kind];return <div className="min-h-screen bg-surface-900 px-5 py-12 text-slate-200"><div className="mx-auto max-w-3xl"><Link to="/" className="text-sm text-violet-300 hover:text-violet-200">← Back to home</Link><h1 className="mt-12 text-4xl font-bold">{page.title}</h1><div className="mt-8 space-y-5 text-base leading-8 text-slate-400">{page.paragraphs.map(p=><p key={p}>{p}</p>)}</div></div></div>}
