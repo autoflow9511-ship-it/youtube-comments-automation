@@ -443,3 +443,22 @@
   .modal { @apply bg-blue-950 border-blue-300/30; }
   .badge-primary, .badge-accent { @apply bg-blue-900 text-white border-blue-400/40; }
 }
+
+/* Consistent photographic background matching the homepage, without tint or blur. */
+.app-scenic-background {
+  background-color: #081427;
+  background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=85&w=1800&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+@media (max-width: 768px) { .app-scenic-background { background-attachment: scroll; } }
+/* Keep working areas legible while leaving the actual scenery unfiltered. */
+.app-scenic-background .card,
+.app-scenic-background .card-glass,
+.app-scenic-background .table-wrapper,
+.app-scenic-background .modal,
+.app-scenic-background .input { background-color: #0b1d3b; color: #fff; border-color: rgba(191,219,254,.45); }
+.app-scenic-background .btn-primary,
+.app-scenic-background .btn-accent { background-color: #1e40af; color: #fff; }
+.app-scenic-background .btn-secondary { background-color: #0b1d3b; color: #fff; border: 1px solid #93c5fd; }
