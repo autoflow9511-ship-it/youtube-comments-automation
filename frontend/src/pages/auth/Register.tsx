@@ -80,8 +80,19 @@ export function Register() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || '/api/v1'}/auth/google`;
+  const handleGoogleLogin = async () => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api.vercel.app/api/v1';
+      const response = await fetch(`${apiBase}/auth/google/url`);
+      if (!response.ok) throw new Error('Unable to start Google sign-in');
+      const data = await response.json();
+      if (!data.url || !data.url.startsWith('https://accounts.google.com/')) {
+        throw new Error('Invalid Google sign-in URL');
+      }
+      window.location.assign(data.url);
+    } catch {
+      toast.error('Unable to start Google sign-in. Please try again.');
+    }
   };
 
   return (
