@@ -16,11 +16,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 const registerSchema = z.object({
-  firstName:       z.string().min(1, 'First name is required').max(50).optional(),
-  lastName:        z.string().min(1, 'Last name is required').max(50).optional(),
+  firstName:       z.string().max(50).optional(),
+  lastName:        z.string().max(50).optional(),
   email:           z.string().email('Invalid email address'),
   password:        z.string().min(8, 'At least 8 characters'),
   confirmPassword: z.string(),
+  termsAccepted:   z.boolean().refine(accepted => accepted, 'You must accept the Terms of Service and Privacy Policy.'),
 }).refine(d => d.password === d.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
@@ -68,8 +69,8 @@ export function Register() {
       await registerUser({
         email:     data.email,
         password:  data.password,
-        firstName: data.firstName,
-        lastName:  data.lastName,
+        firstName: data.firstName?.trim() || undefined,
+        lastName:  data.lastName?.trim() || undefined,
       });
       toast.success('Account created! Welcome aboard.');
       navigate('/dashboard');
@@ -271,7 +272,9 @@ export function Register() {
         <label className="flex items-start gap-2.5 cursor-pointer group">
           <input
             type="checkbox"
-            required
+            {...register('termsAccepted')}
+            aria-invalid={!!errors.termsAccepted}
+            aria-describedby={errors.termsAccepted ? 'terms-error' : undefined}
             className="mt-0.5 w-4 h-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500/50 cursor-pointer"
           />
           <span className="text-xs text-slate-500 leading-relaxed group-hover:text-slate-400 transition-colors">
@@ -281,6 +284,11 @@ export function Register() {
             <Link to="/privacy" className="text-primary-400 hover:text-primary-300">Privacy Policy</Link>
           </span>
         </label>
+        {errors.termsAccepted && (
+          <p id="terms-error" className="mt-1.5 text-xs text-error-400" role="alert">
+            {errors.termsAccepted.message}
+          </p>
+        )}
 
         {/* Submit */}
         <button
