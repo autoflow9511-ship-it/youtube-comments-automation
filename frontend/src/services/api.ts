@@ -98,7 +98,7 @@ export const authApi = {
     api.post('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
-  googleAuth: (data: { accessToken: string; refreshToken: string; providerId: string; email: string; firstName?: string; lastName?: string; avatar?: string }) =>
+  googleAuth: (data: { code: string; state?: string }) =>
     api.post('/auth/google', data),
   googleOAuthUrl: () => api.get('/auth/google/url'),
   refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
@@ -109,9 +109,9 @@ export const authApi = {
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.post('/auth/change-password', data),
   forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (data: { token: string; newPassword: string }) =>
+  resetPassword: (data: { token: string; password: string }) =>
     api.post('/auth/reset-password', data),
-  verifyEmail: (token: string) => api.get(`/auth/verify-email/${token}`),
+  verifyEmail: (token: string) => api.post('/auth/verify-email', { token }),
 };
 
 export const usersApi = {
