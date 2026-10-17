@@ -19,6 +19,8 @@ async function main() {
   try {
     await client.connect();
     const db = client.db();
+    await db.collection('system_configs').createIndex({ key: 1 }, { unique: true });
+    await db.collection('users').createIndex({ email: 1 }, { unique: true });
     const session = client.startSession();
     try {
       await session.withTransaction(async () => {
