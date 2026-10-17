@@ -38,7 +38,7 @@ async function main() {
         }, { session });
         await users.insertOne({
           id: randomUUID(), email, role: 'SUPER_ADMIN',
-          isEmailVerified: true, twoFactorEnabled: false,
+          isEmailVerified: true, approvedByAdmin: true, twoFactorEnabled: false,
           subscriptionTier: 'FREE', passwordHash: null,
           createdAt: now, updatedAt: now,
         }, { session });
