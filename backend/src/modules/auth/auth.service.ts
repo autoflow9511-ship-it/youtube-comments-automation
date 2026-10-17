@@ -46,7 +46,7 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
     });
 
-    if (!user || !user.passwordHash) {
+    if (!user || !user.passwordHash || user.approvedByAdmin !== true) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -98,10 +98,11 @@ export class AuthService {
           email: true,
           role: true,
           deletedAt: true,
+          approvedByAdmin: true,
         },
       });
 
-      if (!user || user.deletedAt) {
+      if (!user || user.deletedAt || user.approvedByAdmin !== true) {
         throw new UnauthorizedException('User not found');
       }
 
@@ -303,13 +304,13 @@ export class AuthService {
     });
 
     if (user) {
-      if (user.deletedAt || !user.isEmailVerified ||
+      if (user.deletedAt || user.approvedByAdmin !== true || !user.isEmailVerified ||
           (user.googleSubjectId && user.googleSubjectId !== profile.id)) {
         throw new UnauthorizedException('Access denied');
       }
       // Bind the Google subject once; never replace an existing binding.
       const binding = await this.prisma.getCollection('user').updateOne(
-        { id: user.id, deletedAt: { $in: [null, undefined] },
+        { id: user.id, deletedAt: null, approvedByAdmin: true,
           $or: [{ googleSubjectId: { $exists: false } }, { googleSubjectId: null }, { googleSubjectId: profile.id }] },
         { $set: { googleSubjectId: profile.id } },
       );
