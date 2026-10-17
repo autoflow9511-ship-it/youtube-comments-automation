@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -34,52 +34,10 @@ export class AuthService {
   // EMAIL/PASSWORD AUTHENTICATION
   // ============================================
 
-  async register(dto: RegisterDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
-
-    const passwordHash = await bcrypt.hash(dto.password, 12);
-    const emailVerificationToken = this.encryptionService.generateRandomString(32);
-
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        emailVerificationToken,
-        role: UserRole.USER,
-        subscriptionTier: SubscriptionTier.FREE,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        role: true,
-        subscriptionTier: true,
-        subscriptionExpiresAt: true,
-        isEmailVerified: true,
-        twoFactorEnabled: true,
-        createdAt: true,
-      },
-    });
-
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-
-    // TODO: Send verification email
-    // await this.sendVerificationEmail(user.email, emailVerificationToken);
-
-    return {
-      user,
-      ...tokens,
-    };
+  // Private installation: user provisioning must happen through a separately
+  // authenticated, audited admin workflow. Never accept public registrations.
+  async register(_dto: RegisterDto) {
+    throw new ForbiddenException('Public registration is disabled');
   }
 
   async login(dto: LoginDto) {
@@ -333,18 +291,8 @@ export class AuthService {
         });
       }
     } else {
-      // Create new user
-      user = await this.prisma.user.create({
-        data: {
-          email: profile.email,
-          firstName: profile.given_name,
-          lastName: profile.family_name,
-          avatar: profile.picture,
-          isEmailVerified: true,
-          role: UserRole.USER,
-          subscriptionTier: SubscriptionTier.FREE,
-        },
-      });
+      // Google identity alone never provisions a private-site account.
+      throw new UnauthorizedException('Access denied');
     }
 
     if (user.deletedAt) {
