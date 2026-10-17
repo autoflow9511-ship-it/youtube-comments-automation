@@ -61,7 +61,8 @@ export function Login() {
     try {
       const response = await authApi.googleOAuthUrl();
       const data = response.data;
-      if (!data.url) throw new Error('Google sign-in URL was not returned');
+      if (!data.url || !data.state || !data.url.startsWith('https://accounts.google.com/')) throw new Error('Invalid Google sign-in response');
+      sessionStorage.setItem('google_oauth_state', data.state);
       window.location.assign(data.url);
     } catch (error) {
       console.error('Google sign-in initialization failed:', error);
