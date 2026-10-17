@@ -265,7 +265,7 @@ export class AuthService {
     const parts = (state || '').split('.');
     if (parts.length !== 3) throw new UnauthorizedException('Invalid OAuth state');
     const [issuedAt, nonce, mac] = parts;
-    if (!/^\\d{13}$/.test(issuedAt) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac))
+    if (!/^\d{13}$/.test(issuedAt) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac))
       throw new UnauthorizedException('Invalid OAuth state');
     const age = Date.now() - Number(issuedAt);
     if (age < 0 || age > 5 * 60 * 1000) throw new UnauthorizedException('Expired OAuth state');
