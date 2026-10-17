@@ -18,7 +18,7 @@ async function main() {
   const client = new MongoClient(uri);
   try {
     await client.connect();
-    const db = client.db();
+    const db = client.db(process.env.MONGODB_DB_NAME || 'youtube_automation');
     await db.collection('system_configs').createIndex({ key: 1 }, { unique: true });
     await db.collection('users').createIndex({ email: 1 }, { unique: true });
     const session = client.startSession();
