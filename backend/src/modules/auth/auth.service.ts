@@ -18,6 +18,7 @@ import {
 } from './dto';
 import { UserRole, SubscriptionTier, ChannelStatus } from '@database/prisma-compat';
 import { google } from 'googleapis';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -254,12 +255,31 @@ export class AuthService {
   // GOOGLE OAUTH & YOUTUBE CHANNEL CONNECTION
   // ============================================
 
+  private oauthStateSecret(): string {
+    const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
+    if (!secret || secret.length < 32) throw new ServiceUnavailableException('OAuth security configuration unavailable');
+    return secret;
+  }
+
+  private verifyOAuthState(state?: string): void {
+    const parts = (state || '').split('.');
+    if (parts.length !== 3) throw new UnauthorizedException('Invalid OAuth state');
+    const [issuedAt, nonce, mac] = parts;
+    if (!/^\\d{13}$/.test(issuedAt) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac))
+      throw new UnauthorizedException('Invalid OAuth state');
+    const age = Date.now() - Number(issuedAt);
+    if (age < 0 || age > 5 * 60 * 1000) throw new UnauthorizedException('Expired OAuth state');
+    const expected = createHmac('sha256', this.oauthStateSecret()).update(issuedAt + '.' + nonce).digest();
+    if (!timingSafeEqual(expected, Buffer.from(mac, 'hex'))) throw new UnauthorizedException('Invalid OAuth state');
+  }
+
   private getGoogleRedirectUri() {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://youtube-comments-automation.vercel.app';
     return `${frontendUrl.replace(/\/$/, '')}/auth/callback`;
   }
 
   async googleAuth(dto: GoogleAuthDto) {
+    this.verifyOAuthState(dto.state);
     // Exchange authorization code using the same redirect URI as the authorization request.
     const oauth2Client = new google.auth.OAuth2(
       this.configService.get<string>('GOOGLE_CLIENT_ID'),
@@ -274,15 +294,26 @@ export class AuthService {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: profile } = await oauth2.userinfo.get();
 
-    if (!profile.email) {
+    if (!profile.email || !profile.verified_email || !profile.id) {
       throw new UnauthorizedException('Email not provided by Google');
     }
 
     let user = await this.prisma.user.findFirst({
-      where: { email: profile.email },
+      where: { email: profile.email.toLowerCase() },
     });
 
     if (user) {
+      if (user.deletedAt || !user.isEmailVerified ||
+          (user.googleSubjectId && user.googleSubjectId !== profile.id)) {
+        throw new UnauthorizedException('Access denied');
+      }
+      // Bind the Google subject once; never replace an existing binding.
+      const binding = await this.prisma.getCollection('user').updateOne(
+        { id: user.id, deletedAt: { $in: [null, undefined] },
+          $or: [{ googleSubjectId: { $exists: false } }, { googleSubjectId: null }, { googleSubjectId: profile.id }] },
+        { $set: { googleSubjectId: profile.id } },
+      );
+      if (binding.matchedCount !== 1) throw new UnauthorizedException('Access denied');
       // Update existing user with Google info if needed
       if (!user.avatar && profile.picture) {
         user = await this.prisma.user.update({
@@ -336,7 +367,8 @@ export class AuthService {
       'https://www.googleapis.com/auth/userinfo.profile',
     ];
 
-    const state = this.encryptionService.generateRandomString(16);
+    const unsignedState = Date.now().toString() + '.' + randomBytes(16).toString('hex');
+    const state = unsignedState + '.' + createHmac('sha256', this.oauthStateSecret()).update(unsignedState).digest('hex');
 
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
