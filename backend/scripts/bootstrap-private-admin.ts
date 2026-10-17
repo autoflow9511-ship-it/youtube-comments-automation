@@ -12,7 +12,7 @@ import { randomUUID } from 'crypto';
 async function main() {
   const uri = process.env.MONGODB_URI;
   const email = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!uri || !email || !/^[^@\\s]+@gmail\\.com$/.test(email)) {
+  if (!uri || !email || !/^[^@\s]+@gmail\.com$/.test(email)) {
     throw new Error('MONGODB_URI and a valid INITIAL_ADMIN_EMAIL Gmail address are required');
   }
   const client = new MongoClient(uri);
