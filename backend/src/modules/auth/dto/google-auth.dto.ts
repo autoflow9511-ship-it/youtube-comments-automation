@@ -6,10 +6,9 @@ export class GoogleAuthDto {
   @IsString()
   code: string;
 
-  @ApiPropertyOptional({ description: 'State parameter for CSRF protection' })
-  @IsOptional()
+  @ApiProperty({ description: 'Signed OAuth state for CSRF protection' })
   @IsString()
-  state?: string;
+  state: string;
 
   @ApiPropertyOptional({ description: 'Redirect URI used in OAuth flow' })
   @IsOptional()

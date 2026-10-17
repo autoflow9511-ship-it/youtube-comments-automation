@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, BadRequestException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -18,6 +18,7 @@ import {
 } from './dto';
 import { UserRole, SubscriptionTier, ChannelStatus } from '@database/prisma-compat';
 import { google } from 'googleapis';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -34,52 +35,10 @@ export class AuthService {
   // EMAIL/PASSWORD AUTHENTICATION
   // ============================================
 
-  async register(dto: RegisterDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
-
-    const passwordHash = await bcrypt.hash(dto.password, 12);
-    const emailVerificationToken = this.encryptionService.generateRandomString(32);
-
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        emailVerificationToken,
-        role: UserRole.USER,
-        subscriptionTier: SubscriptionTier.FREE,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        avatar: true,
-        role: true,
-        subscriptionTier: true,
-        subscriptionExpiresAt: true,
-        isEmailVerified: true,
-        twoFactorEnabled: true,
-        createdAt: true,
-      },
-    });
-
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-
-    // TODO: Send verification email
-    // await this.sendVerificationEmail(user.email, emailVerificationToken);
-
-    return {
-      user,
-      ...tokens,
-    };
+  // Private installation: user provisioning must happen through a separately
+  // authenticated, audited admin workflow. Never accept public registrations.
+  async register(_dto: RegisterDto) {
+    throw new ForbiddenException('Public registration is disabled');
   }
 
   async login(dto: LoginDto) {
@@ -87,7 +46,7 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
     });
 
-    if (!user || !user.passwordHash) {
+    if (!user || !user.passwordHash || user.approvedByAdmin !== true) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -139,10 +98,11 @@ export class AuthService {
           email: true,
           role: true,
           deletedAt: true,
+          approvedByAdmin: true,
         },
       });
 
-      if (!user || user.deletedAt) {
+      if (!user || user.deletedAt || user.approvedByAdmin !== true) {
         throw new UnauthorizedException('User not found');
       }
 
@@ -296,12 +256,31 @@ export class AuthService {
   // GOOGLE OAUTH & YOUTUBE CHANNEL CONNECTION
   // ============================================
 
+  private oauthStateSecret(): string {
+    const secret = this.configService.get<string>('JWT_ACCESS_SECRET');
+    if (!secret || secret.length < 32) throw new ServiceUnavailableException('OAuth security configuration unavailable');
+    return secret;
+  }
+
+  private verifyOAuthState(state?: string): void {
+    const parts = (state || '').split('.');
+    if (parts.length !== 3) throw new UnauthorizedException('Invalid OAuth state');
+    const [issuedAt, nonce, mac] = parts;
+    if (!/^\d{13}$/.test(issuedAt) || !/^[a-f0-9]{32}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(mac))
+      throw new UnauthorizedException('Invalid OAuth state');
+    const age = Date.now() - Number(issuedAt);
+    if (age < 0 || age > 5 * 60 * 1000) throw new UnauthorizedException('Expired OAuth state');
+    const expected = createHmac('sha256', this.oauthStateSecret()).update(issuedAt + '.' + nonce).digest();
+    if (!timingSafeEqual(expected, Buffer.from(mac, 'hex'))) throw new UnauthorizedException('Invalid OAuth state');
+  }
+
   private getGoogleRedirectUri() {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'https://youtube-comments-automation.vercel.app';
     return `${frontendUrl.replace(/\/$/, '')}/auth/callback`;
   }
 
   async googleAuth(dto: GoogleAuthDto) {
+    this.verifyOAuthState(dto.state);
     // Exchange authorization code using the same redirect URI as the authorization request.
     const oauth2Client = new google.auth.OAuth2(
       this.configService.get<string>('GOOGLE_CLIENT_ID'),
@@ -316,15 +295,26 @@ export class AuthService {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: profile } = await oauth2.userinfo.get();
 
-    if (!profile.email) {
+    if (!profile.email || !profile.verified_email || !profile.id) {
       throw new UnauthorizedException('Email not provided by Google');
     }
 
     let user = await this.prisma.user.findFirst({
-      where: { email: profile.email },
+      where: { email: profile.email.toLowerCase() },
     });
 
     if (user) {
+      if (user.deletedAt || user.approvedByAdmin !== true || !user.isEmailVerified ||
+          (user.googleSubjectId && user.googleSubjectId !== profile.id)) {
+        throw new UnauthorizedException('Access denied');
+      }
+      // Bind the Google subject once; never replace an existing binding.
+      const binding = await this.prisma.getCollection('user').updateOne(
+        { id: user.id, deletedAt: null, approvedByAdmin: true,
+          $or: [{ googleSubjectId: { $exists: false } }, { googleSubjectId: null }, { googleSubjectId: profile.id }] },
+        { $set: { googleSubjectId: profile.id } },
+      );
+      if (binding.matchedCount !== 1) throw new UnauthorizedException('Access denied');
       // Update existing user with Google info if needed
       if (!user.avatar && profile.picture) {
         user = await this.prisma.user.update({
@@ -333,18 +323,8 @@ export class AuthService {
         });
       }
     } else {
-      // Create new user
-      user = await this.prisma.user.create({
-        data: {
-          email: profile.email,
-          firstName: profile.given_name,
-          lastName: profile.family_name,
-          avatar: profile.picture,
-          isEmailVerified: true,
-          role: UserRole.USER,
-          subscriptionTier: SubscriptionTier.FREE,
-        },
-      });
+      // Google identity alone never provisions a private-site account.
+      throw new UnauthorizedException('Access denied');
     }
 
     if (user.deletedAt) {
@@ -388,7 +368,8 @@ export class AuthService {
       'https://www.googleapis.com/auth/userinfo.profile',
     ];
 
-    const state = this.encryptionService.generateRandomString(16);
+    const unsignedState = Date.now().toString() + '.' + randomBytes(16).toString('hex');
+    const state = unsignedState + '.' + createHmac('sha256', this.oauthStateSecret()).update(unsignedState).digest('hex');
 
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',

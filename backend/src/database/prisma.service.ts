@@ -65,7 +65,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     if(!uri) throw new Error('MONGODB_URI is required');
     this.client=new MongoClient(uri);
     await this.client.connect();
-    this.db=this.client.db();
+    this.db=this.client.db(process.env.MONGODB_DB_NAME || 'youtube_automation');
     for(const name of Object.keys(COLLECTIONS)) this.models[name]=new MongoModel(this,name);
     await this.ensureIndexes();
     this.logger.log('MongoDB connected successfully');

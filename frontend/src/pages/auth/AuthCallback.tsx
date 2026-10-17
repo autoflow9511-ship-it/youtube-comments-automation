@@ -30,6 +30,14 @@ export function AuthCallback() {
         return;
       }
 
+      const expectedState = sessionStorage.getItem('google_oauth_state');
+      sessionStorage.removeItem('google_oauth_state');
+      if (!state || !expectedState || state !== expectedState) {
+        toast.error('Google sign-in session verification failed');
+        navigate('/login');
+        return;
+      }
+
       try {
         // Exchange code for tokens via backend
         const apiBase = import.meta.env.VITE_API_URL || 'https://youtube-comments-automation-api.vercel.app/api/v1';
